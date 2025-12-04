@@ -1,16 +1,11 @@
 package com.siemens.einkaufsliste;
 
+import com.siemens.einkaufsliste.database.Database;
+
 public final class Main {
 
 	private Main() {
-		Database database = Database.instance();
-		database.connect("", "");
-		
-		Database.Product product;
-		
-		
-		
-		database.disconnect();
+		Database.connect();
 	}
 
 	public static void main(String[] args) {

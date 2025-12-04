@@ -7,9 +7,9 @@ import org.junit.jupiter.api.Test;
 
 public class MainTest {
 
-    @Test
-    @DisplayName("Sanity Check")
-    void shouldAlwaysBeTrue() {
-        assertTrue(true);
-    }
+	@Test
+	@DisplayName("Sanity Check")
+	void shouldAlwaysBeTrue() {
+		assertTrue(true);
+	}
 }
