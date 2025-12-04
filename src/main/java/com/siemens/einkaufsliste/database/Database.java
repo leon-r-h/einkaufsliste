@@ -16,24 +16,29 @@ public final class Database {
 	
 	private static Connection connection;
 	
-	private static void connect(String name, String password) {
+	/**
+	 * Verbindet sich mit der Datenbank.
+	 * 
+	 * @throws IllegalStateException falls Verbindung schon hergestellt
+	 * @throws RuntimeException falls ein anderer Fehler auftritt.
+	 */
+	public static void connect() {
 		try {
 			if(connection != null && !connection.isClosed()) {
 				throw new IllegalStateException();
 			}
 			
 			connection = DriverManager.getConnection(URL_BASE, USER_NAME, USER_PASSWORD);
-			
-			System.out.println("DEBUG: Verbindung zu Datenbank hergestellt!"); // TODO: Entfernen debug
 		} catch(SQLException e) {
 			throw new RuntimeException();
 		}
 	}
-	
-	public static void connect() {
-		connect("user1", "passwort1");
-	}
 
+	/**
+	 * Gibt die bestehende Verbindung zurück.
+	 * 
+	 * @return {@code null} wenn keine Verbindung vorhanden, sonst laufende {@link Connection}.
+	 */
 	public static Connection getConnection() {
 		try {
 			if (connection == null || connection.isClosed()) {
@@ -46,11 +51,18 @@ public final class Database {
 		return connection;
 	}
 
+	/**
+	 * Beendet die Verbindung.
+	 * 
+	 * @throws IllegalStateException falls ein Fehler beim Beenden auftritt.
+	 */
 	public static void disconnect() {
 		try {
 			connection.close();
 		} catch (SQLException e) {
 			throw new IllegalStateException();
 		}
+
+		connection = null;
 	}
 }
