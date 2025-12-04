@@ -1,1 +1,10 @@
-target
+target/
+.classpath
+.project
+.settings/
+.factorypath
+.launch
+.DS_Store
+Thumbs.db
+*.log
+*.bak
