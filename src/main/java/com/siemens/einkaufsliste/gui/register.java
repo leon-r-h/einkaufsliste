@@ -1,42 +1,59 @@
-package main.java.com.siemens.einkaufsliste.gui;
+package com.siemens.einkaufsliste.gui;
 
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.*;
 
 import javax.swing.*;
 
-import javafx.event.ActionEvent;  
-
-public class login extends JFrame {
-    public login(){
+public class register extends JFrame {
+    public register(){
         this.setTitle("Events Elemente");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setSize(520, 250);
+
+        Rectangle bounds = this.getGraphicsConfiguration().getBounds();
+        int x = bounds.x + (bounds.width  - this.getWidth())  / 2;
+        int y = bounds.y + (bounds.height - this.getHeight()) / 2;
+        this.setLocation(x, y);
+
 
         // Hauptpanel
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(0, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         // Textfeld
-        panel.add(new JLabel("Name:"));
+        JLabel name = new JLabel("Name");
+        name.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        panel.add(name);
         JTextField nameField = new JTextField();
         panel.add(nameField);
 
         // Passwortfeld
-        panel.add(new JLabel("Passwort:"));
+        JLabel passwort = new JLabel("Passwort");
+        passwort.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        panel.add(passwort);
         JPasswordField passwordField = new JPasswordField();
         panel.add(passwordField);
 
         // Checkbox
-        panel.add(new JLabel("Newsletter abonnieren:"));
+        JLabel newsletter = new JLabel("Newsletter");
+        newsletter.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        panel.add(newsletter);
         JCheckBox newsletterBox = new JCheckBox();
         panel.add(newsletterBox);
 
         // Radio Buttons (Geschlecht)
-        panel.add(new JLabel("Geschlecht:"));
+        JLabel gender = new JLabel("Geschlecht");
+        gender.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        panel.add(gender);
         JPanel radioPanel = new JPanel();
         JRadioButton male = new JRadioButton("Männlich");
         JRadioButton female = new JRadioButton("Weiblich");
         JRadioButton other = new JRadioButton("Andere");
+        other.setSelected(true);
         ButtonGroup genderGroup = new ButtonGroup();
         genderGroup.add(male);
         genderGroup.add(female);
@@ -46,17 +63,25 @@ public class login extends JFrame {
         radioPanel.add(other);
         panel.add(radioPanel);
 
-        JButton buttonCancel = new JButton("Cancel");
+        JButton buttonCancel = new JButton("<html><b>Cancel</b></html>");
+        
+        buttonCancel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        RoundedCornerBorder.createButton(buttonCancel, 0xCCCCCC, 0, 15, 0);
+
         buttonCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                main.this.dispose();
-                new main();
+                register.this.dispose();
+                new register();
             }
         });
         panel.add(buttonCancel);
 
-        JButton buttonDone = new JButton("Done");
+        JButton buttonDone = new JButton("<html><b>Done</b></html>");
+
+        buttonDone.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        RoundedCornerBorder.createButton(buttonDone, 0xCCCCCC, 0, 15, 0);
+
         buttonDone.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -70,22 +95,18 @@ public class login extends JFrame {
                     gender = "Männlich";
                 } else if (female.isSelected()) {
                     gender = "Weiblich";
-                } else if (other.isSelected()) {
-                    gender = "Andere";
                 } else {
-                    gender = "Keine Auswahl";
+                    gender = "Andere";
                 }
-                System.out.println("Das Geschlecht ist: " + gender);
-                main.this.dispose();
+                register.this.dispose();
             }
         });
         panel.add(buttonDone);
 
         this.add(panel);
-        this.pack(); 
         this.setVisible(true); 
     }
     public static void main(String[] args){
-        new login();
+        new register();
     }
 }
