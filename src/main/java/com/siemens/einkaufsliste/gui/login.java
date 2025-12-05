@@ -7,11 +7,13 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import com.formdev.flatlaf.FlatLightLaf;
+
 public class login extends JFrame {
     public login(){
         this.setTitle("Login");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(300, 240);
+        this.setSize(300, 190);
 
         Rectangle bounds = this.getGraphicsConfiguration().getBounds();
         int x = bounds.x + (bounds.width  - this.getWidth())  / 2;
@@ -27,22 +29,17 @@ public class login extends JFrame {
 
         // Textfeld
         JLabel name = new JLabel("Name");
-        name.setFont(new Font("SansSerif", Font.PLAIN, 16));
         panel.add(name);
         JTextField nameField = new JTextField();
         panel.add(nameField);
 
         // Passwortfeld
         JLabel passwort = new JLabel("Passwort");
-        passwort.setFont(new Font("SansSerif", Font.PLAIN, 16));
         panel.add(passwort);
         JPasswordField passwordField = new JPasswordField();
         panel.add(passwordField);
 
-        JButton buttonCancel = new JButton("<html><b>Cancel</b></html>");
-        
-        buttonCancel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        RoundedCornerBorder.createButton(buttonCancel, 0xCCCCCC, 0, 15, 0);
+        JButton buttonCancel = new JButton("Cancel");
 
         buttonCancel.addActionListener(new ActionListener() {
             @Override
@@ -53,9 +50,7 @@ public class login extends JFrame {
         });
         panel.add(buttonCancel);
 
-        JButton buttonDone = new JButton("<html><b>Done</b></html>");
-        buttonDone.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        RoundedCornerBorder.createButton(buttonDone, 0xCCCCCC, 0, 15, 0);
+        JButton buttonDone = new JButton("Done");
 
         buttonDone.addActionListener(new ActionListener() {
             @Override
@@ -73,9 +68,7 @@ public class login extends JFrame {
         panel2.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
 
         panel2.add(new JLabel(""));
-        JButton buttonRegister = new JButton("<html><b>Register</b></html>");
-        buttonRegister.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        RoundedCornerBorder.createButton(buttonRegister, 0xCCCCCC, 0, 15, 0);
+        JButton buttonRegister = new JButton("Register");
 
         buttonRegister.addActionListener(new ActionListener() {
             @Override
@@ -92,6 +85,8 @@ public class login extends JFrame {
         this.setVisible(true); 
     }
     public static void main(String[] args){
+        FlatLightLaf.setup();
+
         new login();
     }
 }

@@ -7,17 +7,20 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import com.formdev.flatlaf.FlatLightLaf;
+
 public class register extends JFrame {
     public register(){
         this.setTitle("Events Elemente");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(520, 250);
+        this.setSize(515, 320);
 
         Rectangle bounds = this.getGraphicsConfiguration().getBounds();
         int x = bounds.x + (bounds.width  - this.getWidth())  / 2;
         int y = bounds.y + (bounds.height - this.getHeight()) / 2;
         this.setLocation(x, y);
 
+        this.setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
 
         // Hauptpanel
         JPanel panel = new JPanel();
@@ -26,28 +29,24 @@ public class register extends JFrame {
 
         // Textfeld
         JLabel name = new JLabel("Name");
-        name.setFont(new Font("SansSerif", Font.PLAIN, 16));
         panel.add(name);
         JTextField nameField = new JTextField();
         panel.add(nameField);
 
         // Passwortfeld
         JLabel passwort = new JLabel("Passwort");
-        passwort.setFont(new Font("SansSerif", Font.PLAIN, 16));
         panel.add(passwort);
         JPasswordField passwordField = new JPasswordField();
         panel.add(passwordField);
 
         // Checkbox
         JLabel newsletter = new JLabel("Newsletter");
-        newsletter.setFont(new Font("SansSerif", Font.PLAIN, 16));
         panel.add(newsletter);
         JCheckBox newsletterBox = new JCheckBox();
         panel.add(newsletterBox);
 
         // Radio Buttons (Geschlecht)
         JLabel gender = new JLabel("Geschlecht");
-        gender.setFont(new Font("SansSerif", Font.PLAIN, 16));
         panel.add(gender);
         JPanel radioPanel = new JPanel();
         JRadioButton male = new JRadioButton("Männlich");
@@ -63,10 +62,7 @@ public class register extends JFrame {
         radioPanel.add(other);
         panel.add(radioPanel);
 
-        JButton buttonCancel = new JButton("<html><b>Cancel</b></html>");
-        
-        buttonCancel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        RoundedCornerBorder.createButton(buttonCancel, 0xCCCCCC, 0, 15, 0);
+        JButton buttonCancel = new JButton("Cancel");
 
         buttonCancel.addActionListener(new ActionListener() {
             @Override
@@ -77,10 +73,7 @@ public class register extends JFrame {
         });
         panel.add(buttonCancel);
 
-        JButton buttonDone = new JButton("<html><b>Done</b></html>");
-
-        buttonDone.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        RoundedCornerBorder.createButton(buttonDone, 0xCCCCCC, 0, 15, 0);
+        JButton buttonDone = new JButton("Done");
 
         buttonDone.addActionListener(new ActionListener() {
             @Override
@@ -103,10 +96,29 @@ public class register extends JFrame {
         });
         panel.add(buttonDone);
 
+        JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayout(0, 3, 10, 10));
+        panel2.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        panel2.add(new JLabel(""));
+        JButton buttonRegister = new JButton("Login");
+
+        buttonRegister.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                register.this.dispose();
+                new login();
+            }
+        });
+        panel2.add(buttonRegister);
+        panel2.add(new JLabel(""));
+        
         this.add(panel);
+        this.add(panel2);
         this.setVisible(true); 
     }
     public static void main(String[] args){
+        FlatLightLaf.setup();
         new register();
     }
 }
