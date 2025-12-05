@@ -28,8 +28,8 @@ public final class UserDatabaseRepository implements UserRepository {
 				                birthDate DATE,
 				                gender VARCHAR(50),
 				                email VARCHAR(255) UNIQUE,
-				                password VARCHAR(255),
-				            )
+				                password VARCHAR(255)
+				            );
 				""";
 
 		try {
