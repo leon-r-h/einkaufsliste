@@ -57,26 +57,44 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	@Override
 	public void addProduct(Product product) {
-		/*
-		int productID = product.productID();
-		String name = 
 		
+		int productID = product.productID();
+		String name = product.name();
+		Category category = product.category();
+		String brand = product.brand();
+		int price = product.price();
 		
 		try {
 			PreparedStatement ps = connection.prepareStatement("INSERT INTO product (productID, name, category, brand, price) VALUE ( , , , , ");
-			ps.setInt(1, 0)t
+			ps.setInt(1, productID);
+			ps.setString(2, name);
+			ps.setString(3, category.toString());
+			ps.setString(4, brand);
+			ps.setInt(5, price);
 			
+			ps.executeUpdate();
+
+			System.out.println("Produkt hinzugefügt: "+productID);
 			
 			
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
-		*/
+		
 		
 	}
 
 	@Override
 	public void removeProduct(int productID) {
+		try {
+			PreparedStatement ps = connection.prepareStatement("DELETE FROM product WHERE productID =  ");
+			ps.setInt(1, productID);
+			ps.executeUpdate();
+			
+			System.out.println("Produkt geloescht: "+productID);
 		
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
 	}
 }
