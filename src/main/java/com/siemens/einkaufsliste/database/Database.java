@@ -32,10 +32,7 @@ public final class Database {
 			}
 			
 			connection = DriverManager.getConnection(URL_BASE, USER_NAME, USER_PASSWORD);
-			
-			for(ConnectionListener listener : connectionListeners) {
-				listener.connected();
-			}
+			connectionListeners.forEach(ConnectionListener::connected);
 		} catch(SQLException e) {
 			throw new RuntimeException();
 		}

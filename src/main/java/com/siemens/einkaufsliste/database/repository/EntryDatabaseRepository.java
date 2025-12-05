@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import com.siemens.einkaufsliste.database.Database;
 
@@ -13,55 +15,28 @@ import com.siemens.einkaufsliste.database.model.Entry;
 
 public final class EntryDatabaseRepository implements EntryRepository {
 
-	public static final EntryDatabaseRepository REPOSITORY = new EntryDatabaseRepository();
 	
-	private EntryDatabaseRepository() {
-		
-	}
 	
-	private void checkAndCreate(){
-		if (tableExists("Entry"))
-			return;
-		else
-			createTable("Entry");
+	private void createIfNonExistent() {
+		final String sql = """
+				 CREATE TABLE IF NOT EXISTS entry (
+				     entryID INT AUTO_INCREMENT PRIMARY KEY,
+				     userID INT NOT NULL,
+				     productID INT NOT NULL,
+				     quantity INT,
+				     checkDate DATE,
 
-	}
+				     FOREIGN KEY (userID) REFERENCES user(id) ON DELETE CASCADE,
+				     FOREIGN KEY (productID) REFERENCES product(productID)
+				 )
+				""";
 
-	static boolean tableExists(String tableName) {
-		Connection con = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
 		try {
-			con = Database.getConnection();
-			stmt = con.prepareStatement(
-				"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ?");
-			stmt.setString(1, con.getCatalog());
-			stmt.setString(2, tableName);
-			rs = stmt.executeQuery();
-			if (rs.next()) {
-				return rs.getInt(1) > 0;
-			}
-		} catch (Exception e) {
-			throw new IllegalStateException();
-		} finally {
-			try { if (rs != null) rs.close(); } catch (Exception e) {throw new IllegalStateException();}
-			try { if (stmt != null) stmt.close(); } catch (Exception e) {throw new IllegalStateException();}
-		}
-		return false;
-	}
-
-	static void createTable(String tableName){
-		Connection con = null;
-		PreparedStatement stmt = null;
-		try {
-			con = Database.getConnection();
-			stmt = con.prepareStatement(
-				"CREATE TABLE ?( entryID INT PRIMARY KEY, userID INT, productID INT, quantity INT, checkDate LocalDate");
-				stmt.setString(1,tableName);
-			} catch (Exception e) {
-			throw new IllegalStateException();
-		} finally {
-			try { if (stmt != null) stmt.close(); } catch (Exception e) {throw new IllegalStateException();}
+			Connection connection = Database.getConnection();
+			Statement statement = connection.createStatement();
+			statement.execute(sql);
+		} catch (SQLException e) {
+			e.printStackTrace(); // TODO:
 		}
 	}
 
@@ -69,7 +44,6 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
 
-		
 		return entries;
 	}
 
@@ -80,22 +54,22 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public void checkEntry(int entryID) {
-		
+
 	}
 
 	@Override
 	public void uncheckEntry(int entryID) {
-		
+
 	}
 
 	@Override
 	public void addEntry(Entry entry) {
-		
+
 	}
 
 	@Override
 	public void removeEntry(int entryID) {
-		
+
 	}
 
 }

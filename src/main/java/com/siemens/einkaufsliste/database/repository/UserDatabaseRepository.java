@@ -22,18 +22,19 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	private void createIfNonExistent() {
 		final String sql = """
-				CREATE TABLE IF NOT EXISTS users (
-				                id INT AUTO_INCREMENT PRIMARY KEY,
-				                first_name VARCHAR(255),
-				                last_name VARCHAR(255),
-				                birth_date DATE,
+				CREATE TABLE IF NOT EXISTS user (
+				                userID INT AUTO_INCREMENT PRIMARY KEY,
+				                firstName VARCHAR(255),
+				                lastName VARCHAR(255),
+				                birthDate DATE,
 				                gender VARCHAR(50),
 				                email VARCHAR(255) UNIQUE,
 				                password VARCHAR(255),
 				            )
 				""";
 
-		try (Connection connection = Database.getConnection()) {
+		try {
+			Connection connection = Database.getConnection();
 			Statement statement = connection.createStatement();
 			statement.execute(sql);
 		} catch (SQLException e) {
@@ -43,10 +44,9 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	@Override
 	public Optional<User> getUser(int userID) {
-		final String sql = "SELECT * FROM users WHERE id = ?";
+		final String sql = "SELECT * FROM user WHERE userId= ?";
 
-		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
 
 			preparedStatement.setInt(1, userID);
 
@@ -64,10 +64,9 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	@Override
 	public Optional<User> getUser(String email) {
-		final String sql = "SELECT * FROM users WHERE email = ?";
+		final String sql = "SELECT * FROM user WHERE email = ?";
 
-		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
 
 			preparedStatement.setString(1, email);
 
@@ -85,10 +84,9 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	@Override
 	public boolean existsByEmail(String email) {
-		final String sql = "SELECT 1 FROM users WHERE email = ?";
+		final String sql = "SELECT 1 FROM user WHERE email = ?";
 
-		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
 
 			preparedStatement.setString(1, email);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -107,16 +105,15 @@ public final class UserDatabaseRepository implements UserRepository {
 			throw new IllegalArgumentException();
 		}
 
-		final String sql = "INSERT INTO users (firstName, lastName, birthDate, gender, email, password, newsletter) VALUES (?, ?, ?, ?, ?, ?, ?)";
+		final String sql = "INSERT INTO user (firstName, lastName, birthDate, gender, email, password, newsletter) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(sql,
-						Statement.RETURN_GENERATED_KEYS)) {
+		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql,
+				Statement.RETURN_GENERATED_KEYS)) {
 
 			preparedStatement.setString(1, user.firstName());
 			preparedStatement.setString(2, user.lastName());
 			preparedStatement.setDate(3, Date.valueOf(user.birthDate()));
-			preparedStatement.setString(4, user.gender().name());
+			preparedStatement.setInt(4, user.gender().ordinal());
 			preparedStatement.setString(5, user.email());
 			preparedStatement.setString(6, user.password());
 			preparedStatement.setBoolean(7, user.newsLetter());
@@ -145,10 +142,9 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	@Override
 	public boolean deleteUser(int userID) {
-		final String sql = "DELETE FROM users WHERE id = ?";
+		final String sql = "DELETE FROM user WHERE userID = ?";
 
-		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
 
 			preparedStatement.setInt(1, userID);
 			int rowsAffected = preparedStatement.executeUpdate();
@@ -163,15 +159,14 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	@Override
 	public void updateUser(User user) {
-		final String sql = "UPDATE users SET firstName=?, lastName=?, birthDate=?, gender=?, email=?, password=?, newsletter=? WHERE id=?";
+		final String sql = "UPDATE user SET firstName=?, lastName=?, birthDate=?, gender=?, email=?, password=?, newsletter=? WHERE userID=?";
 
-		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
 
 			preparedStatement.setString(1, user.firstName());
 			preparedStatement.setString(2, user.lastName());
 			preparedStatement.setDate(3, Date.valueOf(user.birthDate()));
-			preparedStatement.setString(4, user.gender().name());
+			preparedStatement.setInt(4, user.gender().ordinal());
 			preparedStatement.setString(5, user.email());
 			preparedStatement.setString(6, user.password());
 			preparedStatement.setBoolean(7, user.newsLetter());
@@ -185,7 +180,7 @@ public final class UserDatabaseRepository implements UserRepository {
 	}
 
 	private User mapToUser(ResultSet resultSet) throws SQLException {
-		return new User(resultSet.getInt("id"), resultSet.getString("firstName"), resultSet.getString("lastName"),
+		return new User(resultSet.getInt("userID"), resultSet.getString("firstName"), resultSet.getString("lastName"),
 				resultSet.getDate("birthDate").toLocalDate(), Gender.values()[resultSet.getInt("gender")],
 				resultSet.getString("email"), resultSet.getString("password"), resultSet.getBoolean("newsletter"));
 	}
