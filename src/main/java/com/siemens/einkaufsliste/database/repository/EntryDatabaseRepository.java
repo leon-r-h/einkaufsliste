@@ -43,8 +43,25 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
-
-		return entries;
+		Connection con;
+		PreparedStatement stmt;
+		ResultSet rs;
+		try {
+			con = Database.getConnection();
+			stmt = con.prepareStatement("SELECT * FROM entry WHERE userID = ?");
+			stmt.setInt(1,userID);
+			
+			rs = stmt.executeQuery();
+			while (rs.next()) {
+				entries.add(mapToEntry(rs));
+			}
+			return entries;
+		} catch (SQLException e){
+			throw new IllegalStateException();
+		} finally {
+        // try { if (rs != null) rs.close(); } catch (Exception e) { throw new IllegalStateException();}
+        // try { if (stmt != null) stmt.close(); } catch (Exception e) { throw new IllegalStateException();}
+    }
 	}
 
 	@Override
@@ -72,4 +89,13 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	}
 
+	private Entry mapToEntry(ResultSet rs) throws SQLException {
+		return new Entry(
+			rs.getInt("entryID"),
+			rs.getInt("userID"),
+			rs.getInt("productID"),
+			rs.getInt("quantity"),
+			rs.getDate("checkDate").toLocalDate()
+		);
+	}
 }
