@@ -47,7 +47,7 @@ public final class Database {
 		} catch (SQLException e) {
 			throw new IllegalStateException();
 		}
-
+		
 		return connection;
 	}
 
