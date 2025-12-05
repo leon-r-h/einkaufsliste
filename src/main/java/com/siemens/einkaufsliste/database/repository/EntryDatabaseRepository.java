@@ -9,13 +9,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.siemens.einkaufsliste.database.Database;
-
 import com.siemens.einkaufsliste.database.model.Entry;
 
 public final class EntryDatabaseRepository implements EntryRepository {
 
-	
+	EntryDatabaseRepository() {
+		createIfNonExistent();
+	}
 	
 	private void createIfNonExistent() {
 		final String sql = """

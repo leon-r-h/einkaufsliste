@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
-import com.siemens.einkaufsliste.database.Database;
 import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.model.User.Gender;
 
@@ -16,8 +15,8 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	public final static UserDatabaseRepository REPOSITORY = new UserDatabaseRepository();
 
-	private UserDatabaseRepository() {
-		Database.register(this::createIfNonExistent);
+	UserDatabaseRepository() {
+		createIfNonExistent();
 	}
 
 	private void createIfNonExistent() {

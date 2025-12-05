@@ -17,9 +17,9 @@ public class DatabaseTest {
 	@Test
 	@DisplayName("Second Database Connection Throws Error")
 	void secondDatabaseConnectionShouldThrowError() {
-		com.siemens.einkaufsliste.database.Database.connect();
+		com.siemens.einkaufsliste.database.repository.Database.connect();
 		assertThrows(IllegalStateException.class, () -> {
-			com.siemens.einkaufsliste.database.Database.connect();
+			com.siemens.einkaufsliste.database.repository.Database.connect();
 		});
 		
 	}
@@ -28,14 +28,14 @@ public class DatabaseTest {
 	@DisplayName("Database disconnection before connection throws Error")
 	void databaseDisconnectionBeforeConnectionThrowsError() {
 		assertThrows(IllegalStateException.class, () -> {
-			com.siemens.einkaufsliste.database.Database.disconnect();
+			com.siemens.einkaufsliste.database.repository.Database.disconnect();
 		});
 	}
 
 	@Test
 	@DisplayName("DatabaseIsNotNullAfterConnection")
 	void databaseIsNotNullAfterConnection() {
-		com.siemens.einkaufsliste.database.Database.connect();
-		assertTrue(!(com.siemens.einkaufsliste.database.Database.getConnection() == null));
+		com.siemens.einkaufsliste.database.repository.Database.connect();
+		assertTrue(!(com.siemens.einkaufsliste.database.repository.Database.getConnection() == null));
 	}
 }

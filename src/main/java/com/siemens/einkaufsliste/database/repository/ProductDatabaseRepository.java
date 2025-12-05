@@ -8,19 +8,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.siemens.einkaufsliste.database.Database;
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.Product.Category;
 
 public final class ProductDatabaseRepository implements ProductRepository {
 
-	public static final ProductDatabaseRepository REPOSITORY = new ProductDatabaseRepository();
-	
 	Connection connection;
 	
 	
 	
-	private ProductDatabaseRepository() {
+	ProductDatabaseRepository() {
 		 this.connection = Database.getConnection();
 	}
 	

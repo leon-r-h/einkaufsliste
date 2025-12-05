@@ -1,9 +1,8 @@
-package com.siemens.einkaufsliste.database;
+package com.siemens.einkaufsliste.database.repository;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public final class Database {
 
@@ -17,7 +16,12 @@ public final class Database {
 	
 	private static Connection connection;
 	
-	private static ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
+	
+	
+	private static UserRepository users;
+	private static ProductRepository products; 
+	private static EntryRepository entries;
+	
 	
 	/**
 	 * Verbindet sich mit der Datenbank.
@@ -32,18 +36,13 @@ public final class Database {
 			}
 			
 			connection = DriverManager.getConnection(URL_BASE, USER_NAME, USER_PASSWORD);
-			connectionListeners.forEach(ConnectionListener::connected);
+			
+			users = new UserDatabaseRepository();
+			products = new ProductDatabaseRepository();
+			entries = new EntryDatabaseRepository();
 		} catch(SQLException e) {
 			throw new RuntimeException();
 		}
-	}
-	
-	public static void register(ConnectionListener listener) {
-		if(connection != null) {
-			return;
-		}
-		
-		connectionListeners.add(listener);
 	}
 
 	/**

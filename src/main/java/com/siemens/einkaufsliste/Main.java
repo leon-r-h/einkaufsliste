@@ -1,6 +1,6 @@
 package com.siemens.einkaufsliste;
 
-import com.siemens.einkaufsliste.database.Database;
+import com.siemens.einkaufsliste.database.repository.Database;
 
 public final class Main {
 
