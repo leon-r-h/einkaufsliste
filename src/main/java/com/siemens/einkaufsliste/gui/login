@@ -1,0 +1,91 @@
+package main.java.com.siemens.einkaufsliste.gui;
+
+import java.awt.GridLayout;
+import java.awt.event.*;
+
+import javax.swing.*;
+
+import javafx.event.ActionEvent;  
+
+public class login extends JFrame {
+    public login(){
+        this.setTitle("Events Elemente");
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Hauptpanel
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0, 2, 10, 10));
+
+        // Textfeld
+        panel.add(new JLabel("Name:"));
+        JTextField nameField = new JTextField();
+        panel.add(nameField);
+
+        // Passwortfeld
+        panel.add(new JLabel("Passwort:"));
+        JPasswordField passwordField = new JPasswordField();
+        panel.add(passwordField);
+
+        // Checkbox
+        panel.add(new JLabel("Newsletter abonnieren:"));
+        JCheckBox newsletterBox = new JCheckBox();
+        panel.add(newsletterBox);
+
+        // Radio Buttons (Geschlecht)
+        panel.add(new JLabel("Geschlecht:"));
+        JPanel radioPanel = new JPanel();
+        JRadioButton male = new JRadioButton("Männlich");
+        JRadioButton female = new JRadioButton("Weiblich");
+        JRadioButton other = new JRadioButton("Andere");
+        ButtonGroup genderGroup = new ButtonGroup();
+        genderGroup.add(male);
+        genderGroup.add(female);
+        genderGroup.add(other);
+        radioPanel.add(male);
+        radioPanel.add(female);
+        radioPanel.add(other);
+        panel.add(radioPanel);
+
+        JButton buttonCancel = new JButton("Cancel");
+        buttonCancel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                main.this.dispose();
+                new main();
+            }
+        });
+        panel.add(buttonCancel);
+
+        JButton buttonDone = new JButton("Done");
+        buttonDone.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                System.out.println("Der Name ist:" + nameField.getText());
+                System.out.println("Das Passwort ist:" + passwordField.getText());
+                if(newsletterBox.isSelected()){
+                    System.out.println("Das Abo wurde gewält");
+                }
+                String gender;
+                if (male.isSelected()) {
+                    gender = "Männlich";
+                } else if (female.isSelected()) {
+                    gender = "Weiblich";
+                } else if (other.isSelected()) {
+                    gender = "Andere";
+                } else {
+                    gender = "Keine Auswahl";
+                }
+                System.out.println("Das Geschlecht ist: " + gender);
+                main.this.dispose();
+            }
+        });
+        panel.add(buttonDone);
+
+        this.add(panel);
+        this.pack(); 
+        this.setVisible(true); 
+    }
+    public static void main(String[] args){
+        new login();
+    }
+}
