@@ -1,5 +1,7 @@
 package com.siemens.einkaufsliste.database.model;
 
-public record Entry(int entryID, int userID, int productID, int quantity, Integer checkDate) {
+import java.time.LocalDate;
+
+public record Entry(int entryID, int userID, int productID, int quantity, LocalDate checkDate) {
 
 }
