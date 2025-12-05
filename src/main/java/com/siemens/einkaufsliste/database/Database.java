@@ -57,6 +57,10 @@ public final class Database {
 	 * @throws IllegalStateException falls ein Fehler beim Beenden auftritt.
 	 */
 	public static void disconnect() {
+		if(connection == null) {
+			throw new IllegalStateException();
+		}
+		
 		try {
 			connection.close();
 		} catch (SQLException e) {
