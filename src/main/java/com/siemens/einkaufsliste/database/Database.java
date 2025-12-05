@@ -3,6 +3,7 @@ package com.siemens.einkaufsliste.database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public final class Database {
 
@@ -15,6 +16,8 @@ public final class Database {
 	private static final String USER_PASSWORD = "passwort1";
 	
 	private static Connection connection;
+	
+	private static ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
 	
 	/**
 	 * Verbindet sich mit der Datenbank.
@@ -29,9 +32,21 @@ public final class Database {
 			}
 			
 			connection = DriverManager.getConnection(URL_BASE, USER_NAME, USER_PASSWORD);
+			
+			for(ConnectionListener listener : connectionListeners) {
+				listener.connected();
+			}
 		} catch(SQLException e) {
 			throw new RuntimeException();
 		}
+	}
+	
+	public static void register(ConnectionListener listener) {
+		if(connection != null) {
+			return;
+		}
+		
+		connectionListeners.add(listener);
 	}
 
 	/**
