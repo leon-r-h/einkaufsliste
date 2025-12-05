@@ -22,6 +22,29 @@ public final class Database {
 	private static ProductRepository products; 
 	private static EntryRepository entries;
 	
+	public static UserRepository getUsers() {
+		if(users == null) {
+			throw new IllegalStateException();
+		}
+		
+		return users;
+	}
+	
+	public static ProductRepository getProducts() {
+		if(products == null) {
+			throw new IllegalStateException();
+		}
+		
+		return products;
+	}
+	
+	public static EntryRepository getEntries() {
+		if(entries == null) {
+			throw new IllegalStateException();
+		}
+		
+		return entries;
+	}
 	
 	/**
 	 * Verbindet sich mit der Datenbank.
