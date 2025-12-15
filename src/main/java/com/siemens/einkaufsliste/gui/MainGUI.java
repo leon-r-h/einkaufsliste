@@ -9,6 +9,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -16,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -23,7 +25,6 @@ public class MainGUI extends JFrame {
     JPanel itemSelecter;
     JPanel userList;
     
-    // Container für die Items (nicht die ScrollPane!)
     JPanel itemsContainer;
     JPanel userItemsContainer;
 
@@ -55,27 +56,48 @@ public class MainGUI extends JFrame {
         userItems = new JScrollPane(userItemsContainer);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, itemSelecter, userList);
-        split.setDividerLocation(500); // Optional: Teiler in der Mitte
+        split.setDividerLocation(500);
 
         itemSelecter.setLayout(new BorderLayout());
         userList.setLayout(new BorderLayout());
         
-        itemSelecter.add(new JTextField(), BorderLayout.PAGE_START);
-        userList.add(new JTextField(), BorderLayout.PAGE_START);
+        
+        JPanel searchBar = new JPanel(new BorderLayout());
+        searchBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        JTextField searchField = new JTextField();
+        JButton searchButton = new JButton("🔍");
+
+        searchBar.add(searchField, BorderLayout.CENTER);
+        searchBar.add(searchButton, BorderLayout.EAST);
+
+        itemSelecter.add(searchBar, BorderLayout.PAGE_START);
+
+        JPanel userTitel = new JPanel(new BorderLayout());
+        userTitel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        JLabel userTitelLabel = new JLabel("Meine Einkaufsliste");
+        JButton userRefresh = new JButton("Refresh");
+
+        userTitel.add(userTitelLabel, BorderLayout.CENTER);
+        userTitel.add(userRefresh, BorderLayout.EAST);
+
+        userList.add(userTitel, BorderLayout.PAGE_START);
         
         itemSelecter.add(items, BorderLayout.CENTER);
         userList.add(userItems, BorderLayout.CENTER);
         
-        addItemWithName("Beispiel Item 1");
-        addItemWithName("Beispiel Item 2");
-        addItemWithName("Beispiel Item 3");
+        addItem("Milch");
+        addItem("Brot");
+        addItem("Hackfleisch");
+        addItemToUser("Milch", 100);
+        addItemToUser("Brot", 100);
+        addItemToUser("Hackfleisch", 100);
         
         this.add(split);
         
         this.setVisible(true); 
     }
 
-    private void addItemWithName(String itemName) {
+    private void addItem(String itemName) {
         // Item-Panel erstellen
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
@@ -89,38 +111,74 @@ public class MainGUI extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         buttonPanel.setOpaque(false);
         
-        JButton editBtn = new JButton("Bearbeiten");
-        JButton deleteBtn = new JButton("Löschen");
+        JButton editBtn = new JButton("+");
         
         // Button-Aktionen
         editBtn.addActionListener(e -> {
-            String newName = JOptionPane.showInputDialog("Neuer Name:", nameLabel.getText());
-            if (newName != null && !newName.trim().isEmpty()) {
-                nameLabel.setText(newName.trim());
+            String anzahlstr = JOptionPane.showInputDialog("Anzahl", 1);
+            try{
+                int anzahl = Integer.parseInt(anzahlstr);
+                addItemToUser(nameLabel.getText(), anzahl);
+            } catch (Exception error) {
+                
             }
         });
         
+        
+        buttonPanel.add(editBtn);
+        itemPanel.add(buttonPanel, BorderLayout.EAST);
+        
+        // Zum itemsContainer hinzufügen (nicht zur ScrollPane!)
+        itemsContainer.add(itemPanel);
+        
+        itemsContainer.revalidate();
+        itemsContainer.repaint();
+    }
+
+    private void addItemToUser(String itemName, int Anzahl) {
+        // Item-Panel erstellen
+        JPanel itemPanel = new JPanel(new BorderLayout());
+        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        itemPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        // Checkbox links
+        JCheckBox checkBox = new JCheckBox();
+        itemPanel.add(checkBox, BorderLayout.LINE_START);
+        
+        // Mittlerer Bereich: Name und Anzahl
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+        centerPanel.setOpaque(false);
+        
+        JLabel nameLabel = new JLabel(itemName);
+        centerPanel.add(nameLabel, BorderLayout.LINE_START);
+        
+        JLabel anzahlLabel = new JLabel("" + Anzahl);
+        anzahlLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        centerPanel.add(anzahlLabel, BorderLayout.LINE_END);
+        
+        itemPanel.add(centerPanel, BorderLayout.CENTER);
+        
+        // Delete-Button rechts
+        JButton deleteBtn = new JButton("Löschen");
         deleteBtn.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(this,
                 "'" + nameLabel.getText() + "' löschen?", "Bestätigung", 
                 JOptionPane.YES_NO_OPTION);
             if (result == JOptionPane.YES_OPTION) {
-                itemsContainer.remove(itemPanel);
-                itemsContainer.revalidate();
-                itemsContainer.repaint();
+                userItemsContainer.remove(itemPanel);
+                userItemsContainer.revalidate();
+                userItemsContainer.repaint();
             }
         });
         
-        buttonPanel.add(editBtn);
-        buttonPanel.add(deleteBtn);
-        itemPanel.add(buttonPanel, BorderLayout.EAST);
+        itemPanel.add(deleteBtn, BorderLayout.LINE_END);
         
-        // Zum itemsContainer hinzufügen (nicht zur ScrollPane!)
-        itemsContainer.add(itemPanel);
-        itemsContainer.add(Box.createVerticalStrut(5));
+        // Zum userItemsContainer hinzufügen
+        userItemsContainer.add(itemPanel);
         
-        itemsContainer.revalidate();
-        itemsContainer.repaint();
+        userItemsContainer.revalidate();
+        userItemsContainer.repaint();
     }
 
     public static void main(String[] args){
