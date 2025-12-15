@@ -125,20 +125,37 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	}
 
 	@Override
-	public void addEntry(Entry entry) {
+	public Entry addEntry(Entry entry) {
 		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
 		
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 			stmt.setInt(1, entry.userID());
 			stmt.setInt(2, entry.productID());
 			stmt.setInt(3, entry.quantity());
 			if (entry.checkDate() != null) {stmt.setDate(4, Date.valueOf(entry.checkDate()));}
 			else {stmt.setDate(4, null);}
 			
-			stmt.executeUpdate();
+			int affectedRows = stmt.executeUpdate();
+
+			if (affectedRows == 0) {
+				throw new IllegalArgumentException();
+			}
+
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+				if (generatedKeys.next()) {
+					int newID = generatedKeys.getInt(1);
+
+					return new Entry(newID, entry.userID(), entry.productID(), entry.quantity(), entry.checkDate());
+
+				} else {
+					throw new IllegalArgumentException();
+				}
+				
+			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
+			throw new IllegalArgumentException();
 		}
 	}
 
