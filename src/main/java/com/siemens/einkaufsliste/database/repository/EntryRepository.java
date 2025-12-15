@@ -25,6 +25,7 @@ public interface EntryRepository {
 	 */
 	public void uncheckEntry(int entryID);
 	
+	public void updateQuantity(int entryID, int quantity);
 	
 	public void addEntry(Entry entry);
 	
