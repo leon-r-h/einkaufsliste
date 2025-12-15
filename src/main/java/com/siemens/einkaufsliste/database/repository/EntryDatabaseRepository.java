@@ -29,7 +29,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				     quantity INT,
 				     checkDate DATE,
 
-				     FOREIGN KEY (userID) REFERENCES user(id) ON DELETE CASCADE,
+				     FOREIGN KEY (userID) REFERENCES user(userID) ON DELETE CASCADE,
 				     FOREIGN KEY (productID) REFERENCES product(productID)
 				 )
 				""";
