@@ -4,9 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -22,7 +23,9 @@ import javax.swing.SwingConstants;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class MainGUI extends JFrame {
+
     JPanel itemSelecter;
+    List<JPanel> itemPanels;
     JPanel userList;
     
     JPanel itemsContainer;
@@ -32,6 +35,7 @@ public class MainGUI extends JFrame {
     JScrollPane userItems;
 
     public MainGUI(){
+        itemPanels = new ArrayList();
         this.setTitle("Einkaufsliste");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(1000, 600); 
@@ -130,6 +134,7 @@ public class MainGUI extends JFrame {
         
         // Zum itemsContainer hinzufügen (nicht zur ScrollPane!)
         itemsContainer.add(itemPanel);
+        itemPanels.add(itemPanel);
         
         itemsContainer.revalidate();
         itemsContainer.repaint();
