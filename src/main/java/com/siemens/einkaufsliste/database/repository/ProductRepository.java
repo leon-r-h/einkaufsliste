@@ -27,7 +27,7 @@ public interface ProductRepository {
 	 * 
 	 * @param product The product to add
 	 */
-	public void addProduct(Product product);
+	public Product addProduct(Product product);
 	
 	/**
 	 * Removes a product by ID.

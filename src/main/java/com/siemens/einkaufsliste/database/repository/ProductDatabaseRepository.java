@@ -100,7 +100,6 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	@Override
 	public Product addProduct(Product product) throws IllegalArgumentException  {
-		
 		String name = product.name();
 		Category category = product.category();
 		String brand = product.brand();
@@ -133,8 +132,8 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
-		return product;
 		
+		return null;
 		
 	}
 
