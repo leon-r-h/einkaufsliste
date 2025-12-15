@@ -1,13 +1,16 @@
 package com.siemens.einkaufsliste.database.repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.ArrayList;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import com.siemens.einkaufsliste.database.model.Entry;
 
@@ -43,50 +46,136 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
-		Connection con;
-		PreparedStatement stmt;
-		ResultSet rs;
-		try {
-			con = Database.getConnection();
-			stmt = con.prepareStatement("SELECT * FROM entry WHERE userID = ?");
+		final String sql = "SELECT * FROM entry WHERE userID = ?";
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)){
 			stmt.setInt(1,userID);
 			
-			rs = stmt.executeQuery();
+			try (ResultSet rs = stmt.executeQuery()) {
 			while (rs.next()) {
 				entries.add(mapToEntry(rs));
 			}
-			return entries;
+			}
 		} catch (SQLException e){
-			throw new IllegalStateException();
-		} finally {
-        // try { if (rs != null) rs.close(); } catch (Exception e) { throw new IllegalStateException();}
-        // try { if (stmt != null) stmt.close(); } catch (Exception e) { throw new IllegalStateException();}
-    }
+			e.printStackTrace();
+		}
+		return Collections.unmodifiableList(entries);
 	}
 
 	@Override
 	public Optional<Entry> getEntry(int entryID) {
+		final String sql = "SELECT * FROM entry WHERE entryID= ?";
+		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
+			preparedStatement.setInt(1, entryID);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return Optional.of(mapToEntry(resultSet));
+				}
+			} 
+		} catch (SQLException e) {
+				e.printStackTrace();
+		}
+
 		return Optional.empty();
 	}
 
 	@Override
 	public void checkEntry(int entryID) {
-
+		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
+			
+			stmt.setDate(1, Date.valueOf(LocalDate.now()));
+			stmt.setInt(2, entryID);
+			
+			stmt.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void uncheckEntry(int entryID) {
-
+		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
+			
+			stmt.setDate(1, null);
+			stmt.setInt(2, entryID);
+			
+			stmt.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void addEntry(Entry entry) {
+	public void updateQuantity(int entryID, int quantity) {
+		if (quantity < 1 || getEntry(entryID).get().checkDate() != null)
+			throw new IllegalArgumentException();
 
+		final String sql = "UPDATE entry SET quantity = ? WHERE entryID = ?";
+
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
+			stmt.setInt(1, quantity);
+			stmt.setInt(2, entryID);
+
+			stmt.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public Entry addEntry(Entry entry) {
+		if (entry.quantity()<1 || entry.checkDate() != null)
+			throw new IllegalArgumentException();
+
+		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
+		
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			stmt.setInt(1, entry.userID());
+			stmt.setInt(2, entry.productID());
+			stmt.setInt(3, entry.quantity());
+			stmt.setDate(4, null);
+			
+			int affectedRows = stmt.executeUpdate();
+
+			if (affectedRows == 0) {
+				throw new IllegalArgumentException();
+			}
+
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+				if (generatedKeys.next()) {
+					int newID = generatedKeys.getInt(1);
+
+					return new Entry(newID, entry.userID(), entry.productID(), entry.quantity(), entry.checkDate());
+
+				} else {
+					throw new IllegalArgumentException();
+				}
+				
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
 	public void removeEntry(int entryID) {
+		final String sql = "DELETE FROM entry WHERE entryID = ?";
 
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {	
+			stmt.setInt(1, entryID);
+
+			stmt.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private Entry mapToEntry(ResultSet rs) throws SQLException {

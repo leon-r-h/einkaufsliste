@@ -1,6 +1,5 @@
 package com.siemens.einkaufsliste.gui;
 
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.*;
@@ -11,12 +10,13 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 public class register extends JFrame {
     public register(){
-        this.setTitle("Events Elemente");
+        this.setTitle("Register");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setResizable(false);
         this.setSize(515, 320);
 
         Rectangle bounds = this.getGraphicsConfiguration().getBounds();
-        int x = bounds.x + (bounds.width  - this.getWidth())  / 2;
+        int x = bounds.x + (bounds.width - this.getWidth()) / 2;
         int y = bounds.y + (bounds.height - this.getHeight()) / 2;
         this.setLocation(x, y);
 
