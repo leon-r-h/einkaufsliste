@@ -111,6 +111,9 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public void updateQuantity(int entryID, int quantity) {
+		if (quantity < 1 || getEntry(entryID).get().checkDate() != null)
+			throw new IllegalArgumentException();
+
 		final String sql = "UPDATE entry SET quantity = ? WHERE entryID = ?";
 
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
@@ -126,14 +129,16 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public Entry addEntry(Entry entry) {
+		if (entry.quantity()<1 || entry.checkDate() != null)
+			throw new IllegalArgumentException();
+
 		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
 		
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 			stmt.setInt(1, entry.userID());
 			stmt.setInt(2, entry.productID());
 			stmt.setInt(3, entry.quantity());
-			if (entry.checkDate() != null) {stmt.setDate(4, Date.valueOf(entry.checkDate()));}
-			else {stmt.setDate(4, null);}
+			stmt.setDate(4, null);
 			
 			int affectedRows = stmt.executeUpdate();
 
