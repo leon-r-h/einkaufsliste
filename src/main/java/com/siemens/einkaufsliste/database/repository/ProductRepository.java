@@ -22,16 +22,12 @@ public interface ProductRepository {
 	 */
 	Optional<Product> getProduct(int productID);
 	
-<<<<<<< HEAD
-	public Product addProduct(Product product);
-=======
 	/**
 	 * Adds a new product.
 	 * 
 	 * @param product The product to add
 	 */
 	public void addProduct(Product product);
->>>>>>> branch 'main' of https://github.com/leon-r-h/einkaufsliste.git
 	
 	/**
 	 * Removes a product by ID.
