@@ -61,8 +61,8 @@ public final class Database {
 			connection = DriverManager.getConnection(URL_BASE, USER_NAME, USER_PASSWORD);
 			
 			users = new UserDatabaseRepository();
-			products = new ProductDatabaseRepository();
-			entries = new EntryDatabaseRepository();
+//			products = new ProductDatabaseRepository();
+//			entries = new EntryDatabaseRepository();
 		} catch(SQLException e) {
 			throw new RuntimeException();
 		}
