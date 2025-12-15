@@ -7,18 +7,32 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.Product.Category;
 
-public final class ProductDatabaseRepository implements ProductRepository {
-
-	Connection connection;
-	
+public final class ProductDatabaseRepository implements ProductRepository {	
 	
 	
 	public ProductDatabaseRepository() {
-		 this.connection = Database.getConnection();
+		final String sql = """
+				CREATE TABLE IF NOT EXISTS product (
+				                productID INT AUTO_INCREMENT PRIMARY KEY,
+				                name VARCHAR(255),
+				                category INT,
+				                brand VARCHAR(255),
+				                price INT,
+				            );
+				""";
+
+		try {
+			Connection connection = Database.getConnection();
+			Statement statement = connection.createStatement();
+			statement.execute(sql);
+		} catch (SQLException e) {
+			e.printStackTrace(); // TODO:
+		}
 	}
 	
 	@Override
@@ -26,7 +40,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		
 		List<Product> list = new ArrayList<>();
 		try {
-			PreparedStatement ps = connection.prepareStatement("SELECT * FROM product");
+			PreparedStatement ps = Database.getConnection().prepareStatement("SELECT * FROM product");
 			ResultSet rs = ps.executeQuery();
 			
 			while(rs.next()) {
@@ -56,7 +70,9 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		Optional<Product> o = Optional.empty();
 		
 		try {
-			PreparedStatement ps = connection.prepareStatement("SELECT * FROM product WHERE productID = "+productID);
+			PreparedStatement ps = Database.getConnection().prepareStatement("SELECT * FROM product WHERE productID = ?");
+			ps.setInt(1, productID);
+			
 			ResultSet rs = ps.executeQuery();
 			
 			String name = rs.getString("name");
@@ -86,7 +102,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		int price = product.price();
 		
 		try {
-			PreparedStatement ps = connection.prepareStatement("INSERT INTO product (productID, name, category, brand, price) VALUE (?,?,?,?,?");
+			PreparedStatement ps = Database.getConnection().prepareStatement("INSERT INTO product (productID, name, category, brand, price) VALUE (?,?,?,?,?");
 			ps.setInt(1, productID);
 			ps.setString(2, name);
 			ps.setString(3, category.toString());
@@ -108,7 +124,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	@Override
 	public void removeProduct(int productID) {
 		try {
-			PreparedStatement ps = connection.prepareStatement("DELETE FROM product WHERE productID = ?");
+			PreparedStatement ps = Database.getConnection().prepareStatement("DELETE FROM product WHERE productID = ?");
 			ps.setInt(1, productID);
 			ps.executeUpdate();
 			
