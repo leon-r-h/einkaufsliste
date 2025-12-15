@@ -11,7 +11,7 @@ public interface ProductRepository {
 	
 	Optional<Product> getProduct(int productID);
 	
-	public void addProduct(Product product);
+	public Product addProduct(Product product);
 	
 	public void removeProduct(int productID);
 

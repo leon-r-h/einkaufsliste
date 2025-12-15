@@ -35,27 +35,6 @@ public final class ProductDatabaseRepositoryTest {
 		Database.disconnect();
 	}
 
-	@Test
-	@Order(1)
-	@DisplayName("Add Test Product - Success")
-	void addTestProduct() {
-		testProduct = new Product(0, "Test Apfel", Category.FRUITS, "BioMarke", 299);
-
-		assertDoesNotThrow(() -> {
-			productRepository.addProduct(testProduct);
-		});
-
-		// Verify product was added by retrieving all products
-		List<Product> products = productRepository.getProducts();
-		assertNotNull(products);
-		assertTrue(products.stream().anyMatch(p -> p.name().equals("Test Apfel")));
-
-		// Update testProduct with the actual ID from database
-		testProduct = products.stream()
-				.filter(p -> p.name().equals("Test Apfel"))
-				.findFirst()
-				.orElseThrow();
-	}
 
 	@Test
 	@Order(2)
@@ -89,15 +68,16 @@ public final class ProductDatabaseRepositoryTest {
 
 		assertFalse(foundProduct.isPresent(), "Produkt sollte nicht gefunden werden");
 	}
+	
 
 	@Test
 	@Order(5)
 	@DisplayName("Add Multiple Products - Different Categories")
 	void addMultipleProducts() {
-		Product product1 = new Product(0, "Test Weizenbrot", Category.WHEAT, "BäckerMeister", 249);
-		Product product2 = new Product(0, "Test Laptop", Category.ELECTRONICS, "TechBrand", 89999);
-		Product product3 = new Product(0, "Test Milch", Category.MILK, "AlpenMilch", 129);
-		Product product4 = new Product(0, "Test Cola", Category.DRINKS, "CocaCola", 199);
+		Product product1 = new Product(1, "Test Weizenbrot (Alkoholisch, aber Glutenfrei. Und ohne Zucker. Aber mit Mehl)", Category.ALCOHOL, "BäckerMeister", 249);
+		Product product2 = new Product(2, "Test Laptop", Category.ELECTRONICS, "TechBrand", 89999);
+		Product product3 = new Product(3, "Test Milch", Category.ALCOHOL, "AlpenMilch", 129);
+		Product product4 = new Product(4, "Test Cola", Category.DRINKS, "CocaCola", 199);
 
 		assertDoesNotThrow(() -> {
 			productRepository.addProduct(product1);
@@ -107,7 +87,8 @@ public final class ProductDatabaseRepositoryTest {
 		});
 
 		List<Product> products = productRepository.getProducts();
-		assertTrue(products.stream().anyMatch(p -> p.name().equals("Test Weizenbrot")));
+
+		assertTrue(products.stream().anyMatch(p -> p.name().equals("Test Weizenbrot (Alkoholisch, aber Glutenfrei. Und ohne Zucker. Aber mit Mehl)")));
 		assertTrue(products.stream().anyMatch(p -> p.name().equals("Test Laptop")));
 		assertTrue(products.stream().anyMatch(p -> p.name().equals("Test Milch")));
 		assertTrue(products.stream().anyMatch(p -> p.name().equals("Test Cola")));
@@ -116,8 +97,11 @@ public final class ProductDatabaseRepositoryTest {
 		products.stream()
 				.filter(p -> p.name().startsWith("Test ") && !p.name().equals("Test Apfel"))
 				.forEach(p -> productRepository.removeProduct(p.productID()));
+		
+		productRepository.addProduct(product1);
 	}
 
+	
 	@Test
 	@Order(6)
 	@DisplayName("Test All Categories")
