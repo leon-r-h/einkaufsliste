@@ -16,12 +16,16 @@ public final class Database {
 	
 	private static Connection connection;
 	
-	
-	
 	private static UserRepository users;
 	private static ProductRepository products; 
 	private static EntryRepository entries;
 	
+	/**
+	 * Retrieves the user repository.
+	 * 
+	 * @return The {@link UserRepository} instance
+	 * @throws IllegalStateException If the database is not connected
+	 */
 	public static UserRepository getUsers() {
 		if(users == null) {
 			throw new IllegalStateException();
@@ -30,6 +34,12 @@ public final class Database {
 		return users;
 	}
 	
+	/**
+	 * Retrieves the product repository.
+	 * 
+	 * @return The {@link ProductRepository} instance
+	 * @throws IllegalStateException If the database is not connected
+	 */
 	public static ProductRepository getProducts() {
 		if(products == null) {
 			throw new IllegalStateException();
@@ -38,6 +48,12 @@ public final class Database {
 		return products;
 	}
 	
+	/**
+	 * Retrieves the entry repository.
+	 * 
+	 * @return The {@link EntryRepository} instance
+	 * @throws IllegalStateException If the database is not connected
+	 */
 	public static EntryRepository getEntries() {
 		if(entries == null) {
 			throw new IllegalStateException();
@@ -47,10 +63,10 @@ public final class Database {
 	}
 	
 	/**
-	 * Verbindet sich mit der Datenbank.
+	 * Connects to the database.
 	 * 
-	 * @throws IllegalStateException falls Verbindung schon hergestellt
-	 * @throws RuntimeException falls ein anderer Fehler auftritt.
+	 * @throws IllegalStateException If a connection is already established
+	 * @throws RuntimeException If another error occurs.
 	 */
 	public static void connect() {
 		try {
@@ -69,9 +85,10 @@ public final class Database {
 	}
 
 	/**
-	 * Gibt die bestehende Verbindung zurück.
+	 * Returns the existing connection.
 	 * 
-	 * @return {@code null} wenn keine Verbindung vorhanden, sonst laufende {@link Connection}.
+	 * @return The active {@link Connection}
+	 * @throws IllegalStateException If no connection exists or the connection is closed
 	 */
 	public static Connection getConnection() {
 		try {
@@ -86,9 +103,9 @@ public final class Database {
 	}
 
 	/**
-	 * Beendet die Verbindung.
+	 * Closes the connection.
 	 * 
-	 * @throws IllegalStateException falls ein Fehler beim Beenden auftritt.
+	 * @throws IllegalStateException If an error occurs while closing the connection.
 	 */
 	public static void disconnect() {
 		if(connection == null) {
@@ -100,7 +117,13 @@ public final class Database {
 		} catch (SQLException e) {
 			throw new IllegalStateException();
 		}
+		
+		users = null;
+		products = null;
+		entries = null;
 
 		connection = null;
+		
+		System.gc();
 	}
 }

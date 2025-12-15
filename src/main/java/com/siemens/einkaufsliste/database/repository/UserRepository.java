@@ -7,51 +7,53 @@ import com.siemens.einkaufsliste.database.model.User;
 public interface UserRepository {
 	
 	/**
-	 * Sucht einen Nutzer anhand der ID.
+	 * Searches for a user by ID.
 	 * 
-	 * @param userID Die ID des Nutzers
-	 * @return Ein Optional mit dem User, oder Empty falls nicht gefunden.
+	 * @param userID The ID of the user
+	 * @return An {@link Optional} containing the {@link User}, or {@code Empty} if not found.
 	 */
 	public Optional<User> getUser(int userID);
 	
 	/**
-	 * Sucht einen Nutzer anhand der E-Mail.
+	 * Searches for a user by email.
 	 * 
-	 * @param email Die E-Mail-Adresse
-	 * @return Ein Optional mit dem User, oder Empty falls nicht gefunden.
+	 * @param email The email address
+	 * @return An {@link Optional} containing the {@link User}, or {@code Empty} if not found.
 	 */
 	Optional<User> getUser(String email);
 	
 	/**
-	 * Prüft, ob eine E-Mail bereits vergeben ist.
+	 * Checks whether an email is already taken.
 	 * 
-	 * @param email Die zu prüfende E-Mail
-	 * @return true, wenn die E-Mail bereits in der DB existiert.
+	 * @param email The email to check
+	 * @return {@code true} if the email already exists in the database.
 	 */
 	boolean existsByEmail(String email);
 	
 	/**
-	 * Registriert einen neuen Nutzer.
-	 * @param user Der neue Nutzer
-	 * @return Der gespeicherte Nutzer mit der neuen, korrekten Datenbank-ID.
-	 * @throws IllegalArgumentException Wenn die E-Mail bereits vergeben ist.
+	 * Registers a new user.
+	 * 
+	 * @param user The new user
+	 * @return The saved user with the new, correct database ID.
+	 * @throws IllegalArgumentException If the email is already taken.
 	 */
 	User registerUser(User user) throws IllegalArgumentException;
 
 	/**
-	 * Löscht einen Nutzer.
-	 * @param userID Die ID des zu löschenden Nutzers.
-	 * @return true, wenn ein Nutzer gelöscht wurde; false, wenn die ID nicht existierte.
+	 * Deletes a user.
+	 * 
+	 * @param userID The ID of the user to delete.
+	 * @return {@code true} if a user was deleted; {@code false} if the ID did not exist.
 	 */
 	public boolean deleteUser(int userID);
 	
 	/**
-	 * Aktualisiert einen bestehenden Nutzer.
-	 * Die ID wird direkt aus dem User-Objekt genommen.
+	 * Updates an existing user.
+	 * The ID is taken directly from the User object.
 	 * 
-	 * @param user Der Nutzer mit den neuen Daten (und der existierenden ID).
-	 * @return Der aktualisierte Nutzer.
-	 * @throws IllegalArgumentException Wenn der User oder die ID ungültig ist.
+	 * @param user The user with the new data (and the existing ID).
+	 * @return The updated user.
+	 * @throws IllegalArgumentException If the user or the ID is invalid.
 	 */
 	void updateUser(User user);
 }
