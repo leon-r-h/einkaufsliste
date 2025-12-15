@@ -62,7 +62,7 @@ public final class Database {
 			
 			users = new UserDatabaseRepository();
 			products = new ProductDatabaseRepository();
-//			entries = new EntryDatabaseRepository();
+			entries = new EntryDatabaseRepository();
 		} catch(SQLException e) {
 			throw new RuntimeException();
 		}
