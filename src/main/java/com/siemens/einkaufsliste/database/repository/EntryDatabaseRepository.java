@@ -179,12 +179,23 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	}
 
 	private Entry mapToEntry(ResultSet rs) throws SQLException {
-		return new Entry(
-			rs.getInt("entryID"),
-			rs.getInt("userID"),
-			rs.getInt("productID"),
-			rs.getInt("quantity"),
-			rs.getDate("checkDate").toLocalDate()
-		);
+		if (rs.getDate("checkDate") == null) {
+			return new Entry(
+				rs.getInt("entryID"),
+				rs.getInt("userID"),
+				rs.getInt("productID"),
+				rs.getInt("quantity"),
+				null
+			);
+		}
+		else {
+			return new Entry(
+				rs.getInt("entryID"),
+				rs.getInt("userID"),
+				rs.getInt("productID"),
+				rs.getInt("quantity"),
+				rs.getDate("checkDate").toLocalDate()
+			);
+		}
 	}
 }
