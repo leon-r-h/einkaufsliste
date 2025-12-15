@@ -13,8 +13,6 @@ import com.siemens.einkaufsliste.database.model.User.Gender;
 
 public final class UserDatabaseRepository implements UserRepository {
 
-	public final static UserDatabaseRepository REPOSITORY = new UserDatabaseRepository();
-
 	UserDatabaseRepository() {
 		createIfNonExistent();
 	}
@@ -28,8 +26,9 @@ public final class UserDatabaseRepository implements UserRepository {
 				                birthDate DATE,
 				                gender VARCHAR(50),
 				                email VARCHAR(255) UNIQUE,
-				                password VARCHAR(255)
-				            );
+				                password VARCHAR(255),
+				                newsletter BOOLEAN
+				            )
 				""";
 
 		try {
@@ -161,7 +160,6 @@ public final class UserDatabaseRepository implements UserRepository {
 		final String sql = "UPDATE user SET firstName=?, lastName=?, birthDate=?, gender=?, email=?, password=?, newsletter=? WHERE userID=?";
 
 		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
-
 			preparedStatement.setString(1, user.firstName());
 			preparedStatement.setString(2, user.lastName());
 			preparedStatement.setDate(3, Date.valueOf(user.birthDate()));
@@ -169,10 +167,12 @@ public final class UserDatabaseRepository implements UserRepository {
 			preparedStatement.setString(5, user.email());
 			preparedStatement.setString(6, user.password());
 			preparedStatement.setBoolean(7, user.newsLetter());
-
 			preparedStatement.setInt(8, user.userID());
 
-			preparedStatement.executeUpdate();
+			int rowsAffected = preparedStatement.executeUpdate();
+			if (rowsAffected == 0) {
+				throw new IllegalArgumentException();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace(); // TODO:
 		}
