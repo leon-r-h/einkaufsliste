@@ -1,6 +1,5 @@
 package com.siemens.einkaufsliste.gui;
-    
-import java.awt.Font;
+
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.*;
@@ -13,6 +12,7 @@ public class login extends JFrame {
     public login(){
         this.setTitle("Login");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setResizable(false);
         this.setSize(300, 190);
 
         Rectangle bounds = this.getGraphicsConfiguration().getBounds();
@@ -61,7 +61,6 @@ public class login extends JFrame {
             }
         });
         panel.add(buttonDone);
-        
         
         JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayout(0, 3, 10, 10));
