@@ -17,7 +17,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	
 	
 	
-	ProductDatabaseRepository() {
+	public ProductDatabaseRepository() {
 		 this.connection = Database.getConnection();
 	}
 	
@@ -52,7 +52,28 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	@Override
 	public Optional<Product> getProduct(int productID) {
-		return Optional.empty();
+		
+		Optional<Product> o = Optional.empty();
+		
+		try {
+			PreparedStatement ps = connection.prepareStatement("SELECT * FROM product WHERE productID = "+productID);
+			ResultSet rs = ps.executeQuery();
+			
+			String name = rs.getString("name");
+			String category = rs.getString("category");
+			String brand = rs.getString("brand");
+			int price = rs.getInt("price");
+			
+			Category c = Category.valueOf(category);
+			
+			Product p = new Product(productID, name, c, brand, price);
+			o = Optional.of(p);	
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return o;
 	}
 
 	@Override
@@ -65,7 +86,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		int price = product.price();
 		
 		try {
-			PreparedStatement ps = connection.prepareStatement("INSERT INTO product (productID, name, category, brand, price) VALUE ( , , , , ");
+			PreparedStatement ps = connection.prepareStatement("INSERT INTO product (productID, name, category, brand, price) VALUE (?,?,?,?,?");
 			ps.setInt(1, productID);
 			ps.setString(2, name);
 			ps.setString(3, category.toString());
@@ -87,7 +108,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	@Override
 	public void removeProduct(int productID) {
 		try {
-			PreparedStatement ps = connection.prepareStatement("DELETE FROM product WHERE productID =  ");
+			PreparedStatement ps = connection.prepareStatement("DELETE FROM product WHERE productID = ?");
 			ps.setInt(1, productID);
 			ps.executeUpdate();
 			
