@@ -27,7 +27,7 @@ public interface EntryRepository {
 	
 	public void updateQuantity(int entryID, int quantity);
 	
-	public void addEntry(Entry entry);
+	public Entry addEntry(Entry entry);
 	
 	public void removeEntry(int entryID);
 }
