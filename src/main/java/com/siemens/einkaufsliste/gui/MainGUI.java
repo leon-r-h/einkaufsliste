@@ -40,7 +40,10 @@ public class MainGUI extends JFrame {
     JTextField searchField;
 
     public MainGUI(){
-        userInterface(null);
+        User user = (new Login(this)).getAuthenticatedUser();
+        if(user != null) {
+            userInterface(null);
+        }
     }
 
     public void userInterface (User user){
@@ -107,7 +110,7 @@ public class MainGUI extends JFrame {
         
         this.add(split);
         
-        this.setVisible(true); 
+        this.setVisible(true);
 
         List<Product> productList = Database.getProducts().getProducts();
         if (searchField.getText().equals("")){
