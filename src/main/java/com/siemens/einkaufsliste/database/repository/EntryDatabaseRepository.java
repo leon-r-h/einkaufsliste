@@ -44,6 +44,31 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	}
 
 	@Override
+	public int totalPrice(int userID){
+		final String sql = """
+				SELECT SUM(price)
+				FROM product, entry, user
+				WHERE product.productID = entry.productID
+				AND entry.userID = user.userID
+				AND userID = ?
+				""";
+
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
+			stmt.setInt(1, userID);
+
+			try (ResultSet rs = stmt.executeQuery()) {
+				if (rs.next())
+					return rs.getInt(1);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException();
+		}
+		return 0;
+	}
+
+	@Override
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
 		final String sql = "SELECT * FROM entry WHERE userID = ?";
