@@ -18,9 +18,9 @@ import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.model.User.Gender;
 import com.siemens.einkaufsliste.database.repository.Database;
 
-public class register extends JFrame {
+public class Register extends JFrame {
 
-    public register() {
+    public Register() {
         this.setTitle("Registrierung"); 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
@@ -178,7 +178,7 @@ public class register extends JFrame {
         buttonCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                register.this.dispose(); // Schließt das Registrierungsfenster
+                Register.this.dispose(); // Schließt das Registrierungsfenster
                 // Optional: Hier könnte man das Login-Fenster wieder öffnen
                 // new login().setVisible(true);
             }
@@ -210,13 +210,13 @@ public class register extends JFrame {
                     
                     Database.getUsers().registerUser(newUser);
 
-                    JOptionPane.showMessageDialog(register.this, "Registrierung erfolgreich!", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
-                    register.this.dispose(); 
+                    JOptionPane.showMessageDialog(Register.this, "Registrierung erfolgreich!", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
+                    Register.this.dispose(); 
                     new login().setVisible(true);
                 } catch (IllegalArgumentException err) {
-                    JOptionPane.showMessageDialog(register.this, "Registrierung nicht erfolgreich!", "Erneut versuchen", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(Register.this, "Registrierung nicht erfolgreich!", "Erneut versuchen", JOptionPane.INFORMATION_MESSAGE);
                 } catch (DateTimeParseException err) {
-                    JOptionPane.showMessageDialog(register.this, "Datum ist Falsch!", "Erneut versuchen", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(Register.this, "Datum ist Falsch!", "Erneut versuchen", JOptionPane.INFORMATION_MESSAGE);
                 }
                 
             }
@@ -246,7 +246,7 @@ public class register extends JFrame {
         buttonLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                register.this.dispose();
+                Register.this.dispose();
                 new login().setVisible(true); // Öffnet das Login-Fenster
             }
         });
@@ -265,7 +265,7 @@ public class register extends JFrame {
 
         // FlatLaf Look and Feel für ein modernes Aussehen
         FlatLightLaf.setup();
-        new register();
+        new Register();
     }
 }
 
