@@ -178,9 +178,31 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		
 		return Optional.empty();
 	}
+	
+	private boolean existsByNameAndBrand(String name, String brand) {
+	    String sql = "SELECT COUNT(*) FROM product WHERE name = ? AND brand = ?";
+	    try (PreparedStatement ps = Database.getConnection().prepareStatement(sql)) {
+	        ps.setString(1, name);
+	        ps.setString(2, brand);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                return rs.getInt(1) > 0; 
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
+	
 
 	@Override
 	public Product addProduct(Product product) throws IllegalArgumentException  {
+		
+		if (existsByNameAndBrand(product.name(), product.brand())) {
+	        throw new IllegalArgumentException("Das Produkt existiert bereits!");
+	    }
+		
 		String name = product.name();
 		Category category = product.category();
 		String brand = product.brand();
@@ -201,7 +223,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 			try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
 				if (generatedKeys.next()) {
 					int newID = generatedKeys.getInt(1);
-					System.out.println("Produkt hinzugefügt: "+newID);
+					//System.out.println("Produkt hinzugefügt: "+newID);
 
 					return new Product(newID, product.name(), product.category(), product.brand(), product.price());
 				} else {
