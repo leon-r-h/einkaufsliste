@@ -105,7 +105,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	}
 
 	@Override
-	public void checkEntry(int entryID) {
+	public Entry checkEntry(int entryID) {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
 			
@@ -113,14 +113,21 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			stmt.setInt(2, entryID);
 			
 			stmt.executeUpdate();
+
+			Optional<Entry> entryOptional = getEntry(entryID);
+			if (entryOptional.isPresent() == false) {
+				throw new IllegalArgumentException();
+			}
+			return entryOptional.get();
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		throw new IllegalArgumentException();
 	}
 
 	@Override
-	public void uncheckEntry(int entryID) {
+	public Entry uncheckEntry(int entryID) {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
 			
@@ -129,13 +136,20 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			
 			stmt.executeUpdate();
 			
+			Optional<Entry> entryOptional = getEntry(entryID);
+			if (entryOptional.isPresent() == false) {
+				throw new IllegalArgumentException();
+			}
+			return entryOptional.get();
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		throw new IllegalArgumentException();
 	}
 
 	@Override
-	public void updateQuantity(int entryID, int quantity) {
+	public Entry updateQuantity(int entryID, int quantity) {
 		if (quantity < 1 || getEntry(entryID).get().checkDate() != null)
 			throw new IllegalArgumentException();
 
@@ -146,10 +160,15 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			stmt.setInt(2, entryID);
 
 			stmt.executeUpdate();
-
+			Optional<Entry> entryOptional = getEntry(entryID);
+			if (entryOptional.isPresent() == false) {
+				throw new IllegalArgumentException();
+			}
+			return entryOptional.get(); 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		throw new IllegalArgumentException();
 	}
 
 	@Override

@@ -33,7 +33,7 @@ public interface EntryRepository {
 	 * @throws IllegalStateException If the entry cannot be checked (e.g., entry
 	 *                               does not exist)
 	 */
-	void checkEntry(int entryID);
+	Entry checkEntry(int entryID);
 
 	/**
 	 * Marks an entry as unchecked.
@@ -42,7 +42,7 @@ public interface EntryRepository {
 	 * @throws IllegalStateException If the entry cannot be unchecked (e.g., entry
 	 *                               does not exist)
 	 */
-	void uncheckEntry(int entryID);
+	Entry uncheckEntry(int entryID);
 
 	/**
 	 * Updates the quantity of an entry.
