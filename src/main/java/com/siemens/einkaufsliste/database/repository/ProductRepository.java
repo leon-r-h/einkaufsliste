@@ -14,6 +14,10 @@ public interface ProductRepository {
 	 */
 	List<Product> getProducts();
 	
+	List<Product> findProducts(Product.Category category);
+	
+	List<Product> searchProducts(String name);
+	
 	/**
 	 * Searches for a product by ID.
 	 * 
