@@ -99,7 +99,7 @@ public final class UserDatabaseRepository implements UserRepository {
 
 	@Override
 	public User registerUser(User user) throws IllegalArgumentException {
-		if(user.email().isBlank() || user.firstName().isBlank() || user.lastName().isBlank() || user.password().isBlank() || user.password().length() < 8) {
+		if(user.email().isBlank() || user.firstName().isBlank() || user.lastName().isBlank() || user.password().isBlank() || user.password().length() < 4) {
 			throw new IllegalArgumentException();
 		}
 		
