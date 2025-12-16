@@ -42,8 +42,34 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	
 	
 	@Override
-	public List<Product> findProducts(Product.Category category){
-		return null;
+	public List<Product> findProducts(Product.Category searchCategory){
+		
+		List<Product> list = new ArrayList<>();
+		try {
+			PreparedStatement ps = Database.getConnection().prepareStatement("SELECT * FROM product WHERE product.category =?");
+			ps.setInt(1, searchCategory.ordinal());
+			
+			ResultSet rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				int productID = rs.getInt("productID");
+				String name = rs.getString("name");
+				int category = rs.getInt("category");
+				String brand = rs.getString("brand");
+				int price = rs.getInt("price");
+				
+				Category c = Category.values()[category];
+				
+				Product p = new Product(productID, name, c, brand, price);
+				list.add(p);
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		
+		return list;
 		
 	}
 	
