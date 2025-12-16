@@ -38,6 +38,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 	}
 
+	//Veraltet. In später nicht mehr benötigt stds. searchProducts nutzen
 	@Override
 	public List<Product> findProducts(Product.Category searchCategory) {
 
@@ -73,9 +74,9 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	}
 
+	//Veraltet. In später nicht mehr benötigt stds. searchProducts nutzen
 	@Override
 	public List<Product> searchProducts(String searchName) {
-
 		String sql = """
 				    SELECT * FROM product
 				    WHERE LOWER(name) LIKE ?
@@ -111,6 +112,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		return list;
 
 	}
+
 
 	// min/max standart -1 wenn filter nicht verwendet werden soll
 	public List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categorys,
@@ -170,7 +172,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 		List<Product> list = new ArrayList<>();
 		try {
-			System.out.println(sb.toString());
+			//System.out.println(sb.toString());
 			PreparedStatement ps = Database.getConnection().prepareStatement(sb.toString());
 
 			int pos = 1;
@@ -227,7 +229,6 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	@Override
 	public List<Product> getProducts() {
-
 		List<Product> list = new ArrayList<>();
 		try {
 			PreparedStatement ps = Database.getConnection().prepareStatement("SELECT * FROM product");
