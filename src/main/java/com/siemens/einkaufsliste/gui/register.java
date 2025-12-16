@@ -212,7 +212,7 @@ public class Register extends JFrame {
 
                     JOptionPane.showMessageDialog(Register.this, "Registrierung erfolgreich!", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
                     Register.this.dispose(); 
-                    new login().setVisible(true);
+                    new MainGUI();
                 } catch (IllegalArgumentException err) {
                     JOptionPane.showMessageDialog(Register.this, "Registrierung nicht erfolgreich!", "Erneut versuchen", JOptionPane.INFORMATION_MESSAGE);
                 } catch (DateTimeParseException err) {
@@ -247,7 +247,7 @@ public class Register extends JFrame {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 Register.this.dispose();
-                new login().setVisible(true); // Öffnet das Login-Fenster
+                new MainGUI(); // Öffnet das Login-Fenster
             }
         });
         footerPanel.add(loginPrompt);
@@ -266,18 +266,5 @@ public class Register extends JFrame {
         // FlatLaf Look and Feel für ein modernes Aussehen
         FlatLightLaf.setup();
         new Register();
-    }
-}
-
-// Dummy-Klasse für das Login-Fenster, damit der Code kompilierbar ist
-// In einer echten Anwendung wäre dies eine vollständige Klasse
-class login extends JFrame {
-    public login() {
-        setTitle("Login");
-        setSize(300, 200);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null); // Zentriert das Fenster auf dem Bildschirm
-        add(new JLabel("<html><div style='text-align: center;'>Login-Bildschirm (Platzhalter)<br>Hier kommen deine Login-Felder hin.</div></html>"), BorderLayout.CENTER);
-        // Hier könnten die tatsächlichen Login-Komponenten hinzugefügt werden
     }
 }

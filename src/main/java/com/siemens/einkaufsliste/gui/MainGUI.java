@@ -40,7 +40,10 @@ public class MainGUI extends JFrame {
     JTextField searchField;
 
     public MainGUI(){
-        userInterface((new Login(this)).getAuthenticatedUser());
+        User user = (new Login(this)).getAuthenticatedUser();
+        if(user != null) {
+            userInterface(null);
+        }
     }
 
     public void userInterface (User user){

@@ -13,6 +13,9 @@ import com.siemens.einkaufsliste.database.repository.Database;
 
 public class Login extends JDialog {
     private User authenticatedUser = null;
+
+    private JTextField nameField;
+    private JPasswordField passwordField;
     
     public Login(JFrame parent){
         super(parent, "Anmelden", true); // modal dialog
@@ -44,13 +47,13 @@ public class Login extends JDialog {
         // Textfeld
         JLabel name = new JLabel("Email");
         panel.add(name);
-        JTextField nameField = new JTextField();
+        nameField = new JTextField();
         panel.add(nameField);
 
         // Passwortfeld
         JLabel passwort = new JLabel("Passwort");
         panel.add(passwort);
-        JPasswordField passwordField = new JPasswordField();
+        passwordField = new JPasswordField();
         panel.add(passwordField);
 
         JButton buttonCancel = new JButton("Abbrechen");
@@ -66,27 +69,9 @@ public class Login extends JDialog {
 
         JButton buttonDone = new JButton("Anmelden");
 
-        buttonDone.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                
-                // Hier würdest du normalerweise die Authentifizierung durchführen
-                Optional<User> tmp = Database.getUsers().getUser(nameField.getText());
-                if(tmp.isPresent()){
-                    authenticatedUser = tmp.get();
-                    if(authenticatedUser.password().equals(passwordField.getText())){
-
-                    } else {
-                        System.out.println("das ist das problem");
-                        authenticatedUser = null;
-                    }
-                } else {
-                    authenticatedUser = null;
-                }
-                
-                Login.this.dispose();
-            }
-        });
+        buttonDone.addActionListener(e -> loginButton());
+        passwordField.addActionListener(e -> loginButton());
+        nameField.addActionListener(e -> loginButton());
         panel.add(buttonDone);
         
         JPanel panel2 = new JPanel();
@@ -111,6 +96,26 @@ public class Login extends JDialog {
         this.setVisible(true);
         
         return authenticatedUser;
+    }
+
+    private void loginButton(){
+        Optional<User> tmp = Database.getUsers().getUser(nameField.getText());
+        if(tmp.isPresent()){
+            authenticatedUser = tmp.get();
+            if(authenticatedUser.password().equals(passwordField.getText())){
+                Login.this.dispose();
+            } else {
+                authenticatedUser = null;
+                JOptionPane.showConfirmDialog(Login.this,
+                    "Das Passwort oder die Email ist falsch", "Eingabe falsch", 
+                    JOptionPane.CLOSED_OPTION);
+            }
+        } else {
+            authenticatedUser = null;
+            JOptionPane.showConfirmDialog(Login.this,
+                "Das Passwort oder die Email ist falsch", "Eingabe falsch", 
+                JOptionPane.CLOSED_OPTION);
+        }
     }
     
     public User getAuthenticatedUser() {
