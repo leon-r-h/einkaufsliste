@@ -67,6 +67,15 @@ public final class EntryDatabaseRepository implements EntryRepository {
 		}
 		return 0;
 	}
+	/** 
+	 * 
+	 * Returns a positive int if budget is not exceeded by returned value.
+	 * Returns a negative int if budget is exceeded by returned value.
+	 * 
+	 * */
+	public int budgetTotalPriceDifference(int userID, int budget) {
+		return budget-totalPrice(userID);
+	}
 
 	@Override
 	public List<Entry> getEntries(int userID) {
