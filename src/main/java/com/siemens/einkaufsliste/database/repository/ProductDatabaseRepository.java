@@ -40,6 +40,21 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 	}
 	
+	
+	@Override
+	public List<Product> findProducts(Product.Category category){
+		return null;
+		
+	}
+	
+	@Override
+	public List<Product> searchProducts(String name){
+		return null;
+		
+	}
+	
+	
+	
 	@Override
 	public List<Product> getProducts() {
 		
