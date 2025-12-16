@@ -14,6 +14,8 @@ public interface EntryRepository {
 	 * @return A list of all entries belonging to the specified user.
 	 */
 	List<Entry> getEntries(int userID);
+	
+	int totalPrice(int userID);
 
 	/**
 	 * Searches for an entry by ID.
@@ -31,7 +33,7 @@ public interface EntryRepository {
 	 * @throws IllegalStateException If the entry cannot be checked (e.g., entry
 	 *                               does not exist)
 	 */
-	public void checkEntry(int entryID);
+	void checkEntry(int entryID);
 
 	/**
 	 * Marks an entry as unchecked.
@@ -40,7 +42,7 @@ public interface EntryRepository {
 	 * @throws IllegalStateException If the entry cannot be unchecked (e.g., entry
 	 *                               does not exist)
 	 */
-	public void uncheckEntry(int entryID);
+	void uncheckEntry(int entryID);
 
 	/**
 	 * Updates the quantity of an entry.
@@ -48,7 +50,7 @@ public interface EntryRepository {
 	 * @param entryID  The ID of the entry to update
 	 * @param quantity The new quantity value
 	 */
-	public void updateQuantity(int entryID, int quantity);
+	void updateQuantity(int entryID, int quantity);
 
 	/**
 	 * Adds a new entry.
@@ -56,12 +58,12 @@ public interface EntryRepository {
 	 * @param entry The entry to add
 	 * @return The saved entry with the new, correct database ID.
 	 */
-	public Entry addEntry(Entry entry);
+	Entry addEntry(Entry entry);
 
 	/**
 	 * Removes an entry by ID.
 	 * 
 	 * @param entryID The ID of the entry to remove
 	 */
-	public void removeEntry(int entryID);
+	void removeEntry(int entryID);
 }
