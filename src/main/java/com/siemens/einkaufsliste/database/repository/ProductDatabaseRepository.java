@@ -116,7 +116,87 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		
 	}
 	
-	
+	public List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categorys, String[] brands){
+		
+		StringBuilder sb = new StringBuilder("SELECT * FROM product");		
+		
+		int brandCount;
+		int categoryCount;
+		
+		if(brands == null) {
+			brandCount = 0;
+		}else {
+			brandCount = brands.length;
+		}
+		
+		if(categorys == null) {
+			categoryCount = 0;
+		}else {
+			categoryCount = categorys.length;
+		}
+				
+		if(brandCount > 0 || categoryCount > 0 || maxPrice != minPrice || searchName != "") {
+			sb.append(" WHERE ");
+			
+			
+			
+			if(categoryCount > 0) {
+				sb.append("product.brand IN (?");
+				for(int i=0; i<brandCount-1; i++) {
+					sb.append(", ?");
+				}
+				sb.append(")");
+			}
+			
+			if(categoryCount > 0) {
+				sb.append("product.brand IN (?");
+				for(int i=0; i<categoryCount-1; i++) {
+					sb.append(", ?");
+				}
+				sb.append(")");
+			}
+			
+			
+			
+			
+		}
+		
+		List<Product> list = new ArrayList<>();
+		try {
+			PreparedStatement ps = Database.getConnection().prepareStatement(sb.toString());
+			
+			
+			//
+			
+			
+			
+			
+			
+			
+			ResultSet rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				int productID = rs.getInt("productID");
+				String name = rs.getString("name");
+				int categoryIndex = rs.getInt("category");
+				String brand = rs.getString("brand");
+				int price = rs.getInt("price");
+				
+				Category c = Category.values()[0];
+	                if (categoryIndex >= 0 && categoryIndex < Category.values().length) {
+	                    c = Category.values()[categoryIndex];
+	                }
+				
+				Product p = new Product(productID, name, c, brand, price);
+				list.add(p);
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+
 	
 	@Override
 	public List<Product> getProducts() {
