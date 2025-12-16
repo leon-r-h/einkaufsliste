@@ -12,7 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
@@ -24,13 +27,17 @@ import com.siemens.einkaufsliste.database.repository.EntryRepository;
 import com.siemens.einkaufsliste.database.repository.ProductRepository;
 import com.siemens.einkaufsliste.database.repository.UserRepository;
 
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public final class EntryDatabaseRepositoryTest {
     private static EntryRepository entryRepository;
     private static UserRepository userRepository;
     private static ProductRepository productRepository;
 
-    private static final List<User> testUsers = new ArrayList<>();
-    private static final List<Product> testProducts = new ArrayList<>();
+    private static User testUser;
+    private static Product testProduct;
+
+    
 
     @BeforeAll
     static void setupDatabase() {
@@ -46,32 +53,35 @@ public final class EntryDatabaseRepositoryTest {
     }
 
     @BeforeEach
-    void setupTests() {
-        createTestData();
+    void setupTests(){
+        testUser = createUser();
+        testProduct = createProduct();
     }
 
     @AfterEach
-    void teardownTests() {
-        cleanUpTestData();
+    void teardownTests(){
+        userRepository.deleteUser(testUser.userID());
+        testUser = null;
+        productRepository.removeProduct(testProduct.productID());
+        testProduct = null;
     }
-
     @Test
+    @Order(1)
     @DisplayName("negative EntryId becomes positive")
     void negativeEntryIdBecomesPositive(){
-
-        Entry testEntry = new Entry(-1, testUsers.get(0).userID(), testProducts.get(0).productID(), 2, null);
+        Entry testEntry = new Entry(-1, testUser.userID(), testProduct.productID(), 2, null);
         Entry newEntry = entryRepository.addEntry(testEntry);
         assertTrue(newEntry.entryID()>0);
         entryRepository.removeEntry(newEntry.entryID());
-
     }
 
     @Test
+    @Order(2)
     @DisplayName("added Entry is transfered correctly")
     void addedEntryIsTransferedCorrectly() {
-        Entry testEntry = new Entry(-1, testUsers.get(0).userID(), testProducts.get(0).productID(), 420, null);
+        Entry testEntry = new Entry(-1, testUser.userID(), testProduct.productID(), 420, null);
         Entry newEntry = entryRepository.addEntry(testEntry);
-        
+
         assertTrue(testEntry.userID() == newEntry.userID());
         assertTrue(testEntry.productID() == newEntry.productID());
         assertTrue(testEntry.quantity() == newEntry.quantity());
@@ -81,29 +91,35 @@ public final class EntryDatabaseRepositoryTest {
             assertTrue(testEntry.checkDate().isEqual(newEntry.checkDate()));
         entryRepository.removeEntry(newEntry.entryID());
     }
+
     @Test
+    @Order(3)
     @DisplayName("addEntryWithDateNotNullThrowsError")
     void addEntryWithDateNotNullThrowsError(){
         assertThrows(IllegalArgumentException.class, () -> {
-            Entry testEntry = new Entry(-1, testUsers.get(0).userID(), testProducts.get(0).productID(), 200, LocalDate.now());
-            Entry newEntry = entryRepository.addEntry(testEntry);
+            Entry testEntry = new Entry(-1, testUser.userID(), testProduct.productID(), 200, LocalDate.now());
+            entryRepository.addEntry(testEntry);
         });
     }
 
     @Test
+    @Order(4)
     @DisplayName("getEntryById")
     void getEntryById(){
-        Entry testEntry = new Entry(-1, testUsers.get(0).userID(), testProducts.get(0).productID(), 420, null);
+        Entry testEntry = new Entry(-1, testUser.userID(), testProduct.productID(), 420, null);
         Entry newEntry = entryRepository.addEntry(testEntry);
-        
+
         Optional<Entry> getEntry = entryRepository.getEntry(newEntry.entryID());
         if (getEntry.isPresent())
             assertTrue(newEntry.equals(getEntry.get()));
+        entryRepository.removeEntry(newEntry.entryID());
     }
+
     @Test
+    @Order(5)
     @DisplayName("updateQuantity")
     void updateQuantity() {
-        Entry entry = entryRepository.addEntry(new Entry(-1, testUsers.get(0).userID(), testProducts.get(0).productID(), 1, null));
+        Entry entry = entryRepository.addEntry(new Entry(-1, testUser.userID(), testProduct.productID(), 1, null));
         int newQuantity = 99;
         Entry updated = entryRepository.updateQuantity(entry.entryID(), newQuantity);
         assertTrue(updated.quantity() == newQuantity);
@@ -111,26 +127,29 @@ public final class EntryDatabaseRepositoryTest {
     }
 
     @Test
+    @Order(6)
     @DisplayName("checkUncheckEntry")
     void uncheckEntry() {
-        Entry entry = entryRepository.addEntry(new Entry(-1, testUsers.get(2).userID(), testProducts.get(2).productID(), 3, null));
+        Entry entry = entryRepository.addEntry(new Entry(-1, testUser.userID(), testProduct.productID(), 3, null));
         Entry checked = entryRepository.checkEntry(entry.entryID());
-        assertTrue(checked.checkDate() == null);
+        assertTrue(checked.checkDate() != null);
         Entry unchecked = entryRepository.uncheckEntry(entry.entryID());
         assertTrue(unchecked.checkDate() == null);
         entryRepository.removeEntry(entry.entryID());
     }
 
     @Test
+    @Order(7)
     @DisplayName("removeEntry")
     void removeEntry() {
-        Entry entry = entryRepository.addEntry(new Entry(-1, testUsers.get(3).userID(), testProducts.get(3).productID(), 4, null));
+        Entry entry = entryRepository.addEntry(new Entry(-1, testUser.userID(), testProduct.productID(), 4, null));
         entryRepository.removeEntry(entry.entryID());
         Optional<Entry> result = entryRepository.getEntry(entry.entryID());
         assertTrue(result.isEmpty());
     }
 
     @Test
+    @Order(8)
     @DisplayName("getEntryNotFound")
     void getEntryNotFound() {
         Optional<Entry> result = entryRepository.getEntry(-99999);
@@ -138,6 +157,7 @@ public final class EntryDatabaseRepositoryTest {
     }
 
     @Test
+    @Order(9)
     @DisplayName("removeEntryNotExisting")
     void removeEntryNotExisting() {
         // Sollte keine Exception werfen
@@ -145,8 +165,24 @@ public final class EntryDatabaseRepositoryTest {
     }
 
     @Test
+    @Order(10)
     @DisplayName("getEntriesByUserId")
     void getEntriesByUserId() {
+        List<User> testUsers = new ArrayList<>();
+        List<Product> testProducts = new ArrayList<>();
+        long unique = System.currentTimeMillis();
+        testUsers.add(userRepository.registerUser(new User(-1, "Quentin", "Tarantino", LocalDate.of(1963, 3, 27), Gender.MALE, "quentin.tarantino+test"+unique+"@email.com", "QT63", true)));
+        testUsers.add(userRepository.registerUser(new User(-1, "Aiko", "Tanaka", LocalDate.of(1990, 8, 15), Gender.FEMALE, "aiko.tanaka+test"+unique+"@email.com", "AT90", true)));
+        testUsers.add(userRepository.registerUser(new User(-1, "Lars", "Magnusson", LocalDate.of(1982, 12, 5), Gender.MALE, "lars.magnusson+test"+unique+"@email.com", "LM82", true)));
+        testUsers.add(userRepository.registerUser(new User(-1, "Fatima", "Alami", LocalDate.of(1988, 6, 21), Gender.FEMALE, "fatima.alami+test"+unique+"@email.com", "FA88", true)));
+        testUsers.add(userRepository.registerUser(new User(-1, "Mateo", "Silva", LocalDate.of(1995, 11, 2), Gender.MALE, "mateo.silva+test"+unique+"@email.com", "MS95", true)));
+
+        testProducts.add(productRepository.addProduct(new Product(-1, "Spezi Zero", Category.DRINKS, "Paulaner", 109)));
+        testProducts.add(productRepository.addProduct(new Product(-1, "Milch", Category.MILK, "Weihenstephan", 129)));
+        testProducts.add(productRepository.addProduct(new Product(-1, "Brot", Category.WHEAT, "Bäcker", 249)));
+        testProducts.add(productRepository.addProduct(new Product(-1, "Käse", Category.MILK, "Alpenhain", 299)));
+        testProducts.add(productRepository.addProduct(new Product(-1, "Apfel", Category.FRUITS, "Obsthof", 59)));
+
         // Für jeden User einen Entry anlegen
         List<Entry> createdEntries = new ArrayList<>();
         for (int i = 0; i < testUsers.size(); i++) {
@@ -170,40 +206,22 @@ public final class EntryDatabaseRepositoryTest {
         for (Entry entry : createdEntries) {
             entryRepository.removeEntry(entry.entryID());
         }
-    }
-
-    /**
-     * Sets private testUsers and private testProducts (je 5)
-     */
-    void createTestData() {
-        testUsers.clear();
-        testProducts.clear();
-        long unique = System.currentTimeMillis();
-        testUsers.add(userRepository.registerUser(new User(-1, "Quentin", "Tarantino", LocalDate.of(1963, 3, 27), Gender.MALE, "quentin.tarantino+test"+unique+"@email.com", "QT63", true)));
-        testUsers.add(userRepository.registerUser(new User(-1, "Aiko", "Tanaka", LocalDate.of(1990, 8, 15), Gender.FEMALE, "aiko.tanaka+test"+unique+"@email.com", "AT90", true)));
-        testUsers.add(userRepository.registerUser(new User(-1, "Lars", "Magnusson", LocalDate.of(1982, 12, 5), Gender.MALE, "lars.magnusson+test"+unique+"@email.com", "LM82", true)));
-        testUsers.add(userRepository.registerUser(new User(-1, "Fatima", "Alami", LocalDate.of(1988, 6, 21), Gender.FEMALE, "fatima.alami+test"+unique+"@email.com", "FA88", true)));
-        testUsers.add(userRepository.registerUser(new User(-1, "Mateo", "Silva", LocalDate.of(1995, 11, 2), Gender.MALE, "mateo.silva+test"+unique+"@email.com", "MS95", true)));
-
-        testProducts.add(productRepository.addProduct(new Product(-1, "Spezi Zero", Category.DRINKS, "Paulaner", 109)));
-        testProducts.add(productRepository.addProduct(new Product(-1, "Milch", Category.MILK, "Weihenstephan", 129)));
-        testProducts.add(productRepository.addProduct(new Product(-1, "Brot", Category.WHEAT, "Bäcker", 249)));
-        testProducts.add(productRepository.addProduct(new Product(-1, "Käse", Category.MILK, "Alpenhain", 299)));
-        testProducts.add(productRepository.addProduct(new Product(-1, "Apfel", Category.FRUITS, "Obsthof", 59)));
-    }
-
-    /**
-     * Löscht alle Testdaten aus der Datenbank
-     */
-    void cleanUpTestData() {
         for (User user : testUsers) {
             userRepository.deleteUser(user.userID());
         }
-        testUsers.clear();
-
         for (Product product : testProducts) {
             productRepository.removeProduct(product.productID());
         }
-        testProducts.clear();
+    }
+
+    // Hilfsmethoden für einzelne User/Produkte
+    private User createUser() {
+        long unique = System.nanoTime();
+        return userRepository.registerUser(new User(-1, "Test", "User", LocalDate.of(1990, 1, 1), Gender.MALE, "test.user"+unique+"@email.com", "PAWO", true));
+    }
+
+    private Product createProduct() {
+        long unique = System.nanoTime();
+        return productRepository.addProduct(new Product(-1, "Testprodukt" + unique, Category.DRINKS, "Testhersteller", 100));
     }
 }
