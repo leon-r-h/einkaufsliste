@@ -49,8 +49,9 @@ public interface EntryRepository {
 	 * 
 	 * @param entryID  The ID of the entry to update
 	 * @param quantity The new quantity value
+	 * @return Entry The entry with an updated quantity
 	 */
-	void updateQuantity(int entryID, int quantity);
+	Entry updateQuantity(int entryID, int quantity);
 
 	/**
 	 * Adds a new entry.
