@@ -248,6 +248,77 @@ public final class ProductDatabaseRepositoryTest {
 		productRepository.removeProduct(savedNoise1.productID());
 	}
     
+    @Test
+	@Order(13)
+	@DisplayName("SearchProduct")
+	void searchProducts() {
+		
+		Product targetSoundex = new Product(0, "Jägermeister 0.8L", Category.DRINKS, "Mast-Jägermeister", 1299);
+		
+		Product targetSubstring = new Product(0, "Naturtrüber Apfelsaft", Category.DRINKS, "BioMarke", 199);
+		
+		Product noise = new Product(0, "Gaming Laptop", Category.ELECTRONICS, "Alienware", 200000);
+
+		Product savedSoundex = productRepository.addProduct(targetSoundex);
+		Product savedSubstring = productRepository.addProduct(targetSubstring);
+		Product savedNoise = productRepository.addProduct(noise);
+
+
+		List<Product> resultFuzzy = productRepository.searchProducts("jägar");
+		
+		assertNotNull(resultFuzzy);
+		assertTrue(resultFuzzy.stream().anyMatch(p -> p.productID() == savedSoundex.productID()),
+				"Suche nach 'jägar' sollte 'Jägermeister' finden (Phonetische Ähnlichkeit)");
+		
+		assertFalse(resultFuzzy.stream().anyMatch(p -> p.productID() == savedNoise.productID()),
+				"Suche nach 'jägar' darf 'Gaming Laptop' NICHT finden");
+
+
+		List<Product> resultSubstring = productRepository.searchProducts("saft");
+		
+		assertTrue(resultSubstring.stream().anyMatch(p -> p.productID() == savedSubstring.productID()),
+				"Suche nach 'saft' sollte 'Apfelsaft' finden (Substring)");
+
+
+		List<Product> resultCaps = productRepository.searchProducts("JÄGAR");
+		assertTrue(resultCaps.stream().anyMatch(p -> p.productID() == savedSoundex.productID()),
+				"Groß/Kleinschreibung sollte ignoriert werden");
+
+		productRepository.removeProduct(savedSoundex.productID());
+		productRepository.removeProduct(savedSubstring.productID());
+		productRepository.removeProduct(savedNoise.productID());
+	}
+    
+    @Test
+	@Order(14)
+	@DisplayName("Complex Filter Search - Brand & Price")
+	void testComplexSearchFilter() {
+		
+		Product hit = new Product(0, "Gaming Maus", Category.ELECTRONICS, "Logitech", 50);
+		
+		Product tooExpensive = new Product(0, "Teure Tastatur", Category.ELECTRONICS, "Logitech", 150);
+		
+		Product wrongBrand = new Product(0, "Anderes Headset", Category.ELECTRONICS, "Razer", 50);
+
+		Product savedHit = productRepository.addProduct(hit);
+		Product savedExp = productRepository.addProduct(tooExpensive);
+		Product savedWrong = productRepository.addProduct(wrongBrand);
+
+		String[] searchBrands = {"Logitech"};
+		int maxPrice = 100;
+		
+		List<Product> results = productRepository.searchProducts("", maxPrice, -1, null, searchBrands);
+
+		assertNotNull(results);
+		assertFalse(results.isEmpty(), "Es sollte ein Produkt gefunden werden");
+		assertEquals(1, results.size(), "Es darf genau nur 1 Produkt übrig bleiben");
+		
+		assertEquals(savedHit.productID(), results.get(0).productID());
+		
+		productRepository.removeProduct(savedHit.productID());
+		productRepository.removeProduct(savedExp.productID());
+		productRepository.removeProduct(savedWrong.productID());
+	}
     
     
 }
