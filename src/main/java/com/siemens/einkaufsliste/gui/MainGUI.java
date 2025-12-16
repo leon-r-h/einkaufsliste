@@ -90,6 +90,11 @@ public class MainGUI extends JFrame {
                 for(int i = 0; i < productList.size(); i++){
                     addItem(productList.get(i).name());
                 }
+            } else {
+                List<Product> productList = Database.getProducts().searchProducts(searchField.getText());
+                for(int i = 0; i < productList.size(); i++){
+                    addItem(productList.get(i).name());
+                }
             }
         });
 
