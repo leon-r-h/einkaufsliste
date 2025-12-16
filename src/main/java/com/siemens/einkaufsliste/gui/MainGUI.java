@@ -21,6 +21,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.repository.Database;
 
 public class MainGUI extends JFrame {
 
@@ -34,12 +36,15 @@ public class MainGUI extends JFrame {
     JScrollPane items;
     JScrollPane userItems;
 
+    JTextField searchField;
+
     public MainGUI(){
         itemPanels = new ArrayList();
         this.setTitle("Einkaufsliste");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(1000, 600); 
+        this.setSize(1000, 600);
 
+        // Positioniert das Fenster in die Mitte
         Rectangle bounds = this.getGraphicsConfiguration().getBounds();
         int x = bounds.x + (bounds.width  - this.getWidth())  / 2;
         int y = bounds.y + (bounds.height - this.getHeight()) / 2;
@@ -65,11 +70,26 @@ public class MainGUI extends JFrame {
         itemSelecter.setLayout(new BorderLayout());
         userList.setLayout(new BorderLayout());
         
-        
+        // Suchleiste mit Button
         JPanel searchBar = new JPanel(new BorderLayout());
         searchBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        JTextField searchField = new JTextField();
+        searchField = new JTextField();
         JButton searchButton = new JButton("🔍");
+
+        // Logik der Suche
+        searchButton.addActionListener(e -> {
+            for(int i = 0; i < itemPanels.size(); i++){
+                itemsContainer.remove(itemPanels.get(i));
+            }
+            itemsContainer.revalidate();
+            itemsContainer.repaint();
+            List<Product> productList = Database.getProducts().getProducts();
+            if (searchField.getText().equals("")){
+                for(int i = 0; i < productList.size(); i++){
+                    addItem(productList.get(i).name());
+                }
+            }
+        });
 
         searchBar.add(searchField, BorderLayout.CENTER);
         searchBar.add(searchButton, BorderLayout.EAST);
@@ -88,13 +108,6 @@ public class MainGUI extends JFrame {
         
         itemSelecter.add(items, BorderLayout.CENTER);
         userList.add(userItems, BorderLayout.CENTER);
-        
-        addItem("Milch");
-        addItem("Brot");
-        addItem("Hackfleisch");
-        addItemToUser("Milch", 100);
-        addItemToUser("Brot", 100);
-        addItemToUser("Hackfleisch", 100);
         
         this.add(split);
         
@@ -187,6 +200,8 @@ public class MainGUI extends JFrame {
     }
 
     public static void main(String[] args){
+        
+        Database.connect();
         FlatLightLaf.setup();
         new MainGUI();
     }
