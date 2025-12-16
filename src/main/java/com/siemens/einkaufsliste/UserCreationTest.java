@@ -6,9 +6,9 @@ import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.repository.Database;
 import com.siemens.einkaufsliste.database.repository.UserRepository;
 
-public final class Main {
+public final class UserCreationTest {
 
-	private Main() {
+	private UserCreationTest() {
 		Database.connect();
 		
 		UserRepository users = Database.getUsers();
@@ -98,7 +98,7 @@ public final class Main {
 	}
 
 	public static void main(String[] args) {
-		new Main();
+		new UserCreationTest();
 	}
 
 }
