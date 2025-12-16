@@ -7,11 +7,17 @@ import java.awt.FlowLayout; // Für den Footer-Panel
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import javax.swing.*;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import com.siemens.einkaufsliste.database.model.User;
+import com.siemens.einkaufsliste.database.model.User.Gender;
 import com.siemens.einkaufsliste.database.repository.Database;
+import com.siemens.einkaufsliste.database.repository.UserDatabaseRepository;
 
 public class register extends JFrame {
 
@@ -182,31 +188,38 @@ public class register extends JFrame {
         buttonDone.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                String name = nameField.getText();
-                // Passwort sicher abrufen (getText() ist veraltet, getPassword() ist besser)
+                String firstName = nameField.getText();
+                String lastName = lastNameField.getText();
                 String password = new String(passwordField.getPassword());
                 boolean newsletterSubscribed = newsletterBox.isSelected();
-
-                String gender;
+                String day = dayField.getText();
+                String month = monthField.getText();
+                String year = yearField.getText();
+                String email = emailField.getText();
+                Gender gender;
                 if (male.isSelected()) {
-                    gender = "Männlich";
+                    gender = Gender.MALE;
                 } else if (female.isSelected()) {
-                    gender = "Weiblich";
+                    gender = Gender.FEMALE;
                 } else {
-                    gender = "Andere";
+                    gender = Gender.OTHER;
                 }
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-                System.out.println("Vorname: " + name);
-                System.out.println("Passwort (nicht sicher speichern!): " + password); // In einer echten App hashen!
-                System.out.println("Newsletter: " + newsletterSubscribed);
-                System.out.println("Geschlecht: " + gender);
-                System.out.println("Geburtsdatum: " + dayField.getText() + "." + monthField.getText() + "." + yearField.getText());
+                try {
+                    User newUser = new User(firstName, lastName, LocalDate.parse(day + "-" + month + "-" + year, formatter), gender, email, password, newsletterSubscribed);
+                    
+                    Database.getUsers().registerUser(newUser);
 
-                // Hier würde die eigentliche Registrierungslogik stehen
-                JOptionPane.showMessageDialog(register.this, "Registrierung erfolgreich!", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
-                register.this.dispose(); // Schließt das Fenster nach erfolgreicher Registrierung
-                // Optional: Hier zum Login-Fenster wechseln
-                // new login().setVisible(true);
+                    JOptionPane.showMessageDialog(register.this, "Registrierung erfolgreich!", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
+                    register.this.dispose(); 
+                    new login().setVisible(true);
+                } catch (IllegalArgumentException err) {
+                    JOptionPane.showMessageDialog(register.this, "Registrierung nicht erfolgreich!", "Erneut versuchen", JOptionPane.INFORMATION_MESSAGE);
+                } catch (DateTimeParseException err) {
+                    JOptionPane.showMessageDialog(register.this, "Datum ist Falsch!", "Erneut versuchen", JOptionPane.INFORMATION_MESSAGE);
+                }
+                
             }
         });
 
