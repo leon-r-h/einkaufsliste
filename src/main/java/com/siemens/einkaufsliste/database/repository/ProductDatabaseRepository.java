@@ -54,11 +54,14 @@ public final class ProductDatabaseRepository implements ProductRepository {
 			while(rs.next()) {
 				int productID = rs.getInt("productID");
 				String name = rs.getString("name");
-				int category = rs.getInt("category");
+				int categoryIndex = rs.getInt("category");
 				String brand = rs.getString("brand");
 				int price = rs.getInt("price");
 				
-				Category c = Category.values()[category];
+				 Category c = Category.values()[0];
+	                if (categoryIndex >= 0 && categoryIndex < Category.values().length) {
+	                    c = Category.values()[categoryIndex];
+	                }
 				
 				Product p = new Product(productID, name, c, brand, price);
 				list.add(p);
@@ -74,8 +77,42 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	}
 	
 	@Override
-	public List<Product> searchProducts(String name){
-		return null;
+	public List<Product> searchProducts(String searchName){
+		
+		String sql = """
+		        SELECT * FROM product 
+		        WHERE LOWER(name) LIKE ? 
+		        OR SOUNDEX(name) LIKE CONCAT(TRIM(TRAILING '0' FROM SOUNDEX(?)), '%')
+		    """;
+		
+		List<Product> list = new ArrayList<>();
+		try {
+			PreparedStatement ps = Database.getConnection().prepareStatement(sql);
+	        ps.setString(1, "%" + searchName.toLowerCase() + "%");
+	        
+	        ps.setString(2, searchName);
+
+			
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while(rs.next()) {
+	                int productID = rs.getInt("productID");
+	                String name = rs.getString("name");
+	                int categoryIndex = rs.getInt("category");
+	                String brand = rs.getString("brand");
+	                int price = rs.getInt("price");
+	                
+	                Category c = Category.values()[0];
+	                if (categoryIndex >= 0 && categoryIndex < Category.values().length) {
+	                    c = Category.values()[categoryIndex];
+	                }
+
+	                list.add(new Product(productID, name, c, brand, price));
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return list;
 		
 	}
 	
@@ -92,11 +129,14 @@ public final class ProductDatabaseRepository implements ProductRepository {
 			while(rs.next()) {
 				int productID = rs.getInt("productID");
 				String name = rs.getString("name");
-				int category = rs.getInt("category");
+				int categoryIndex = rs.getInt("category");
 				String brand = rs.getString("brand");
 				int price = rs.getInt("price");
 				
-				Category c = Category.values()[category];
+				Category c = Category.values()[0];
+	                if (categoryIndex >= 0 && categoryIndex < Category.values().length) {
+	                    c = Category.values()[categoryIndex];
+	                }
 				
 				Product p = new Product(productID, name, c, brand, price);
 				list.add(p);

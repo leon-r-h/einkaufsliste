@@ -199,6 +199,55 @@ public final class ProductDatabaseRepositoryTest {
         productRepository.removeProduct(saved.productID());
     }
     
+    @Test
+	@Order(12) 
+	@DisplayName("Find Products by Category - Filter & Completeness")
+	void findProductsByCategory() {
+		
+		Category searchCategory = Category.FRUITS;
+		
+		Category noiseCategory = Category.ELECTRONICS;
+
+		Product target1 = new Product(0, "Such-Apfel", searchCategory, "BioHof", 199);
+		Product target2 = new Product(0, "Such-Banane", searchCategory, "Chiquita", 299);
+		Product noise1 = new Product(0, "Stör-Laptop", noiseCategory, "Dell", 99999);
+
+		Product savedTarget1 = productRepository.addProduct(target1);
+		Product savedTarget2 = productRepository.addProduct(target2);
+		Product savedNoise1 = productRepository.addProduct(noise1);
+
+		assertNotNull(savedTarget1);
+		assertNotNull(savedTarget2);
+		assertNotNull(savedNoise1);
+
+		List<Product> foundProducts = productRepository.findProducts(searchCategory);
+
+		
+		assertNotNull(foundProducts, "Die Rückgabeliste darf nicht null sein");
+		assertFalse(foundProducts.isEmpty(), "Es sollten Produkte gefunden werden");
+
+		boolean allMatchCategory = foundProducts.stream()
+				.allMatch(p -> p.category() == searchCategory);
+		assertTrue(allMatchCategory, "Alle gefundenen Produkte müssen die Kategorie " + searchCategory + " haben");
+
+		boolean containsTarget1 = foundProducts.stream()
+				.anyMatch(p -> p.productID() == savedTarget1.productID());
+		boolean containsTarget2 = foundProducts.stream()
+				.anyMatch(p -> p.productID() == savedTarget2.productID());
+		
+		assertTrue(containsTarget1, "Der Such-Apfel sollte gefunden werden");
+		assertTrue(containsTarget2, "Die Such-Banane sollte gefunden werden");
+
+		boolean containsNoise = foundProducts.stream()
+				.anyMatch(p -> p.productID() == savedNoise1.productID());
+		
+		assertFalse(containsNoise, "Der Stör-Laptop (Electronics) darf NICHT gefunden werden");
+
+		productRepository.removeProduct(savedTarget1.productID());
+		productRepository.removeProduct(savedTarget2.productID());
+		productRepository.removeProduct(savedNoise1.productID());
+	}
+    
     
     
 }
