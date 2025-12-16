@@ -22,6 +22,7 @@ import javax.swing.SwingConstants;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.repository.Database;
 
 public class MainGUI extends JFrame {
@@ -39,6 +40,10 @@ public class MainGUI extends JFrame {
     JTextField searchField;
 
     public MainGUI(){
+        userInterface(null);
+    }
+
+    public void userInterface (User user){
         itemPanels = new ArrayList();
         this.setTitle("Einkaufsliste");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -78,25 +83,9 @@ public class MainGUI extends JFrame {
         searchField = new JTextField();
         JButton searchButton = new JButton("🔍");
 
-        // Logik der Suche
-        searchButton.addActionListener(e -> {
-            for(int i = 0; i < itemPanels.size(); i++){
-                itemsContainer.remove(itemPanels.get(i));
-            }
-            itemsContainer.revalidate();
-            itemsContainer.repaint();
-            if (searchField.getText().equals("")){
-                List<Product> productList = Database.getProducts().getProducts();
-                for(int i = 0; i < productList.size(); i++){
-                    addItem(productList.get(i).name());
-                }
-            } else {
-                List<Product> productList = Database.getProducts().searchProducts(searchField.getText());
-                for(int i = 0; i < productList.size(); i++){
-                    addItem(productList.get(i).name());
-                }
-            }
-        });
+        // Suche
+        searchButton.addActionListener(e -> search());
+        searchField.addActionListener(e -> search());
 
         searchBar.add(searchField, BorderLayout.CENTER);
         searchBar.add(searchButton, BorderLayout.EAST);
@@ -211,6 +200,26 @@ public class MainGUI extends JFrame {
         
         userItemsContainer.revalidate();
         userItemsContainer.repaint();
+    }
+
+    private void search (){
+        for(int i = 0; i < itemPanels.size(); i++){
+            itemsContainer.remove(itemPanels.get(i));
+        }
+        itemsContainer.revalidate();
+        itemsContainer.repaint();
+        if (searchField.getText().equals("")){
+            List<Product> productList = Database.getProducts().getProducts();
+            for(int i = 0; i < productList.size(); i++){
+                addItem(productList.get(i).name());
+            }
+        } else {
+            List<Product> productList = Database.getProducts().searchProducts(searchField.getText());
+            for(int i = 0; i < productList.size(); i++){
+                addItem(productList.get(i).name());
+            }
+        }
+        searchField.selectAll();
     }
 
     public static void main(String[] args){

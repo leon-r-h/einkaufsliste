@@ -7,10 +7,15 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import com.siemens.einkaufsliste.database.model.User;
 
 public class login extends JFrame {
     public login(){
-        this.setTitle("Login");
+        anmelden();
+    }
+
+    public void anmelden(){
+        this.setTitle("Anmelden");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
         this.setSize(300, 190);
@@ -28,7 +33,7 @@ public class login extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         // Textfeld
-        JLabel name = new JLabel("Name");
+        JLabel name = new JLabel("Email");
         panel.add(name);
         JTextField nameField = new JTextField();
         panel.add(nameField);
@@ -39,7 +44,7 @@ public class login extends JFrame {
         JPasswordField passwordField = new JPasswordField();
         panel.add(passwordField);
 
-        JButton buttonCancel = new JButton("Cancel");
+        JButton buttonCancel = new JButton("Abbrechen");
 
         buttonCancel.addActionListener(new ActionListener() {
             @Override
@@ -50,7 +55,7 @@ public class login extends JFrame {
         });
         panel.add(buttonCancel);
 
-        JButton buttonDone = new JButton("Done");
+        JButton buttonDone = new JButton("Anmelden");
 
         buttonDone.addActionListener(new ActionListener() {
             @Override
@@ -81,7 +86,7 @@ public class login extends JFrame {
 
         this.add(panel);
         this.add(panel2);
-        this.setVisible(true); 
+        this.setVisible(true);
     }
     public static void main(String[] args){
         FlatLightLaf.setup();

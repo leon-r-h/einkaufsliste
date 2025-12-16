@@ -17,7 +17,6 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.model.User.Gender;
 import com.siemens.einkaufsliste.database.repository.Database;
-import com.siemens.einkaufsliste.database.repository.UserDatabaseRepository;
 
 public class register extends JFrame {
 
