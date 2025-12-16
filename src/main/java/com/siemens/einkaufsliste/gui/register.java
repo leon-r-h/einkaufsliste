@@ -1,54 +1,150 @@
 package com.siemens.einkaufsliste.gui;
 
-import java.awt.GridLayout;
+import java.awt.BorderLayout; // Import für BorderLayout
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.FlowLayout; // Für den Footer-Panel
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import com.siemens.einkaufsliste.database.repository.Database;
 
 public class register extends JFrame {
-    public register(){
-        this.setTitle("Register");
+
+    public register() {
+        this.setTitle("Registrierung"); 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
-        this.setSize(515, 320);
+        this.setSize(550, 405);
 
+        // Fenster zentrieren
         Rectangle bounds = this.getGraphicsConfiguration().getBounds();
         int x = bounds.x + (bounds.width - this.getWidth()) / 2;
         int y = bounds.y + (bounds.height - this.getHeight()) / 2;
         this.setLocation(x, y);
 
-        this.setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
+        // Verwende BorderLayout für den Haupt-Frame, um Formular und Footer zu trennen
+        this.setLayout(new BorderLayout());
 
-        // Hauptpanel
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(0, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        // Hauptformular-Panel
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        // Gesamt-Padding um das Formular herum
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Textfeld
-        JLabel name = new JLabel("Name");
-        panel.add(name);
-        JTextField nameField = new JTextField();
-        panel.add(nameField);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // Innenabstand für alle Komponenten
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Komponenten füllen horizontalen Platz aus
+
+        int row = 0; // Zähler für die aktuelle Zeile
+
+        // Vorname
+        gbc.gridx = 0; // Erste Spalte
+        gbc.gridy = row; // Aktuelle Zeile
+        gbc.anchor = GridBagConstraints.WEST; // Label linksbündig ausrichten
+        gbc.weightx = 0; // Label nimmt keinen zusätzlichen horizontalen Platz ein
+        formPanel.add(new JLabel("Vorname:"), gbc);
+
+        gbc.gridx = 1; // Zweite Spalte
+        gbc.weightx = 1.0; // Textfeld nimmt den gesamten verfügbaren horizontalen Platz ein
+        JTextField nameField = new JTextField(20); // Vorgegebene Breite für das Textfeld
+        formPanel.add(nameField, gbc);
+        row++; // Nächste Zeile
+
+        // Nachname
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Nachname:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JTextField lastNameField = new JTextField(20);
+        formPanel.add(lastNameField, gbc);
+        row++;
+
+        // Email
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Email:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JTextField emailField = new JTextField(20);
+        formPanel.add(emailField, gbc);
+        row++;
 
         // Passwortfeld
-        JLabel passwort = new JLabel("Passwort");
-        panel.add(passwort);
-        JPasswordField passwordField = new JPasswordField();
-        panel.add(passwordField);
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Passwort:"), gbc);
 
-        // Checkbox
-        JLabel newsletter = new JLabel("Newsletter");
-        panel.add(newsletter);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JPasswordField passwordField = new JPasswordField(20);
+        formPanel.add(passwordField, gbc);
+        row++;
+
+        // Geburtsdatum
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Geburtsdatum:"), gbc);
+
+        // Inneres Panel für Tag/Monat/Jahr (verwendet auch GridBagLayout für interne Anordnung)
+        JPanel datumFields = new JPanel(new GridBagLayout());
+        GridBagConstraints gbcDate = new GridBagConstraints();
+        gbcDate.insets = new Insets(0, 2, 0, 2); // Kleinerer interner Abstand
+        gbcDate.fill = GridBagConstraints.HORIZONTAL;
+
+        JTextField dayField = new JTextField(2); // Kleinere bevorzugte Breite
+        JTextField monthField = new JTextField(2);
+        JTextField yearField = new JTextField(4); // Größere bevorzugte Breite
+
+        gbcDate.gridx = 0;
+        gbcDate.weightx = 0.2; // Tag nimmt 20% Platz
+        datumFields.add(dayField, gbcDate);
+
+        gbcDate.gridx = 1;
+        gbcDate.weightx = 0.2; // Monat nimmt 20% Platz
+        datumFields.add(monthField, gbcDate);
+
+        gbcDate.gridx = 2;
+        gbcDate.weightx = 0.6; // Jahr nimmt 60% Platz
+        datumFields.add(yearField, gbcDate);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0; // Das gesamte Datum-Panel nimmt den vollen horizontalen Platz ein
+        formPanel.add(datumFields, gbc);
+        row++;
+
+        // Checkbox (Newsletter)
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Newsletter abonnieren:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         JCheckBox newsletterBox = new JCheckBox();
-        panel.add(newsletterBox);
+        gbc.anchor = GridBagConstraints.WEST; // Checkbox linksbündig ausrichten
+        gbc.fill = GridBagConstraints.NONE; // Checkbox soll sich nicht horizontal strecken
+        formPanel.add(newsletterBox, gbc);
+        gbc.fill = GridBagConstraints.HORIZONTAL; // fill-Einstellung für nächste Komponenten zurücksetzen
+        row++;
 
         // Radio Buttons (Geschlecht)
-        JLabel gender = new JLabel("Geschlecht");
-        panel.add(gender);
-        JPanel radioPanel = new JPanel();
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Geschlecht:"), gbc);
+
+        JPanel radioPanel = new JPanel(); // Verwendet standardmäßig FlowLayout, was hier gut passt
         JRadioButton male = new JRadioButton("Männlich");
         JRadioButton female = new JRadioButton("Weiblich");
         JRadioButton other = new JRadioButton("Andere");
@@ -60,29 +156,37 @@ public class register extends JFrame {
         radioPanel.add(male);
         radioPanel.add(female);
         radioPanel.add(other);
-        panel.add(radioPanel);
 
-        JButton buttonCancel = new JButton("Cancel");
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.WEST; // Radio-Panel linksbündig ausrichten
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Erlaubt dem Panel, sich bei Bedarf zu füllen
+        formPanel.add(radioPanel, gbc);
+        row++;
+
+        // --- Aktions-Buttons (Abbrechen und Registrieren) ---
+        // Ein Panel für diese Buttons, um sie zu gruppieren
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0)); // Zentriertes FlowLayout
+        JButton buttonCancel = new JButton("Abbrechen");
+        JButton buttonDone = new JButton("Registrieren");
 
         buttonCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                register.this.dispose();
-                new register();
+                register.this.dispose(); // Schließt das Registrierungsfenster
+                // Optional: Hier könnte man das Login-Fenster wieder öffnen
+                // new login().setVisible(true);
             }
         });
-        panel.add(buttonCancel);
-
-        JButton buttonDone = new JButton("Done");
 
         buttonDone.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                System.out.println("Der Name ist:" + nameField.getText());
-                System.out.println("Das Passwort ist:" + passwordField.getText());
-                if(newsletterBox.isSelected()){
-                    System.out.println("Das Abo wurde gewält");
-                }
+                String name = nameField.getText();
+                // Passwort sicher abrufen (getText() ist veraltet, getPassword() ist besser)
+                String password = new String(passwordField.getPassword());
+                boolean newsletterSubscribed = newsletterBox.isSelected();
+
                 String gender;
                 if (male.isSelected()) {
                     gender = "Männlich";
@@ -91,34 +195,77 @@ public class register extends JFrame {
                 } else {
                     gender = "Andere";
                 }
-                register.this.dispose();
+
+                System.out.println("Vorname: " + name);
+                System.out.println("Passwort (nicht sicher speichern!): " + password); // In einer echten App hashen!
+                System.out.println("Newsletter: " + newsletterSubscribed);
+                System.out.println("Geschlecht: " + gender);
+                System.out.println("Geburtsdatum: " + dayField.getText() + "." + monthField.getText() + "." + yearField.getText());
+
+                // Hier würde die eigentliche Registrierungslogik stehen
+                JOptionPane.showMessageDialog(register.this, "Registrierung erfolgreich!", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
+                register.this.dispose(); // Schließt das Fenster nach erfolgreicher Registrierung
+                // Optional: Hier zum Login-Fenster wechseln
+                // new login().setVisible(true);
             }
         });
-        panel.add(buttonDone);
 
-        JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayout(0, 3, 10, 10));
-        panel2.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        buttonPanel.add(buttonCancel);
+        buttonPanel.add(buttonDone);
 
-        panel2.add(new JLabel(""));
-        JButton buttonRegister = new JButton("Login");
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.gridwidth = 2; // Buttons spannen sich über beide Spalten
+        gbc.anchor = GridBagConstraints.CENTER; // Button-Panel zentrieren
+        gbc.fill = GridBagConstraints.NONE; // Button-Panel selbst nicht strecken
+        gbc.weighty = 1.0; // Schiebt andere Komponenten nach oben, gibt Platz nach unten
+        formPanel.add(buttonPanel, gbc);
+        row++;
 
-        buttonRegister.addActionListener(new ActionListener() {
+        this.add(formPanel, BorderLayout.CENTER); // Fügt das Hauptformular-Panel in die Mitte des Frames ein
+
+        // --- Footer-Panel (für den Login-Button) ---
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10)); // Zentriertes FlowLayout
+        footerPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0)); // Padding
+
+        JLabel loginPrompt = new JLabel("Bereits registriert?");
+        JButton buttonLogin = new JButton("Login");
+
+        buttonLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 register.this.dispose();
-                new login();
+                new login().setVisible(true); // Öffnet das Login-Fenster
             }
         });
-        panel2.add(buttonRegister);
-        panel2.add(new JLabel(""));
-        
-        this.add(panel);
-        this.add(panel2);
-        this.setVisible(true); 
+        footerPanel.add(loginPrompt);
+        footerPanel.add(buttonLogin);
+
+        this.add(footerPanel, BorderLayout.SOUTH); // Fügt den Footer unten an
+
+        this.setVisible(true);
     }
-    public static void main(String[] args){
+
+    public static void main(String[] args) {
+        // Sicherstellen, dass die Datenbankverbindung vor dem GUI-Start hergestellt wird
+        // Oder handle dies im Login/Registrierungsprozess selbst
+        Database.connect();
+
+        // FlatLaf Look and Feel für ein modernes Aussehen
         FlatLightLaf.setup();
         new register();
+    }
+}
+
+// Dummy-Klasse für das Login-Fenster, damit der Code kompilierbar ist
+// In einer echten Anwendung wäre dies eine vollständige Klasse
+class login extends JFrame {
+    public login() {
+        setTitle("Login");
+        setSize(300, 200);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null); // Zentriert das Fenster auf dem Bildschirm
+        add(new JLabel("<html><div style='text-align: center;'>Login-Bildschirm (Platzhalter)<br>Hier kommen deine Login-Felder hin.</div></html>"), BorderLayout.CENTER);
+        // Hier könnten die tatsächlichen Login-Komponenten hinzugefügt werden
     }
 }

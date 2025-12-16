@@ -63,6 +63,8 @@ public class MainGUI extends JFrame {
         // ScrollPanes um die Container
         items = new JScrollPane(itemsContainer);
         userItems = new JScrollPane(userItemsContainer);
+        items.getVerticalScrollBar().setUnitIncrement(16);
+        userItems.getVerticalScrollBar().setUnitIncrement(16);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, itemSelecter, userList);
         split.setDividerLocation(500);
@@ -83,8 +85,8 @@ public class MainGUI extends JFrame {
             }
             itemsContainer.revalidate();
             itemsContainer.repaint();
-            List<Product> productList = Database.getProducts().getProducts();
             if (searchField.getText().equals("")){
+                List<Product> productList = Database.getProducts().getProducts();
                 for(int i = 0; i < productList.size(); i++){
                     addItem(productList.get(i).name());
                 }
@@ -112,6 +114,13 @@ public class MainGUI extends JFrame {
         this.add(split);
         
         this.setVisible(true); 
+
+        List<Product> productList = Database.getProducts().getProducts();
+        if (searchField.getText().equals("")){
+            for(int i = 0; i < productList.size(); i++){
+                addItem(productList.get(i).name());
+            }
+        }
     }
 
     private void addItem(String itemName) {
