@@ -39,8 +39,42 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			Statement statement = connection.createStatement();
 			statement.execute(sql);
 		} catch (SQLException e) {
-			e.printStackTrace(); // TODO:
+			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void nukeEntries(int userID) {
+		final String sql = """
+				DELETE FROM entry
+				WHERE userID = ?
+				""";
+		
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
+			stmt.setInt(1, userID);
+
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public List<Entry> getEntries(int userID) {
+		List<Entry> entries = new ArrayList<>();
+		final String sql = "SELECT * FROM entry WHERE userID = ?";
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)){
+			stmt.setInt(1,userID);
+			
+			try (ResultSet rs = stmt.executeQuery()) {
+			while (rs.next()) {
+				entries.add(mapToEntry(rs));
+			}
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return Collections.unmodifiableList(entries);
 	}
 
 	@Override
@@ -66,33 +100,6 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			throw new IllegalArgumentException();
 		}
 		return 0;
-	}
-	/** 
-	 * 
-	 * Returns a positive int if budget is not exceeded by returned value.
-	 * Returns a negative int if budget is exceeded by returned value.
-	 * 
-	 * */
-	public int budgetTotalPriceDifference(int userID, int budget) {
-		return budget-totalPrice(userID);
-	}
-
-	@Override
-	public List<Entry> getEntries(int userID) {
-		List<Entry> entries = new ArrayList<>();
-		final String sql = "SELECT * FROM entry WHERE userID = ?";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)){
-			stmt.setInt(1,userID);
-			
-			try (ResultSet rs = stmt.executeQuery()) {
-			while (rs.next()) {
-				entries.add(mapToEntry(rs));
-			}
-			}
-		} catch (SQLException e){
-			e.printStackTrace();
-		}
-		return Collections.unmodifiableList(entries);
 	}
 
 	@Override
@@ -182,8 +189,9 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public Entry addEntry(Entry entry) {
-		if (entry.quantity()<1 || entry.checkDate() != null)
-			throw new IllegalArgumentException();
+		// Wirf Exception, wenn die Menge ungültig ist oder das Entry schon ein checkDate hat (beides nicht erlaubt beim Anlegen)
+		if (entry.quantity() < 1 || entry.checkDate() != null)
+			throw new IllegalArgumentException(); // Ungültige Eingabedaten
 
 		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
 		
@@ -191,12 +199,12 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			stmt.setInt(1, entry.userID());
 			stmt.setInt(2, entry.productID());
 			stmt.setInt(3, entry.quantity());
-			stmt.setDate(4, null);
+			stmt.setDate(4, null); // checkDate ist beim Anlegen immer null
 			
 			int affectedRows = stmt.executeUpdate();
 
 			if (affectedRows == 0) {
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException(); // Es wurde kein Datensatz eingefügt
 			}
 
 			try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
@@ -206,14 +214,13 @@ public final class EntryDatabaseRepository implements EntryRepository {
 					return new Entry(newID, entry.userID(), entry.productID(), entry.quantity(), entry.checkDate());
 
 				} else {
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException(); // Es wurde kein neuer Schlüssel generiert
 				}
-				
 			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(); // SQL-Fehler beim Einfügen
 		}
 	}
 
@@ -250,5 +257,14 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				rs.getDate("checkDate").toLocalDate()
 			);
 		}
+	}
+	/** 
+	 * 
+	 * Returns a positive int if budget is not exceeded by returned value.
+	 * Returns a negative int if budget is exceeded by returned value.
+	 * 
+	 * */
+	public int budgetTotalPriceDifference(int userID, int budget) {
+		return budget-totalPrice(userID);
 	}
 }
