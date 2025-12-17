@@ -17,7 +17,7 @@ public interface ProductRepository {
 	List<Product> findProducts(Product.Category searchCategory);
 	
 	List<Product> searchProducts(String searchName);
-
+	
 	List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categories, String[] brand);
 	
 	List<String> brands();
