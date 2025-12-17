@@ -7,6 +7,8 @@ import com.siemens.einkaufsliste.database.model.Entry;
 
 public interface EntryRepository {
 
+	void replaceEntries(int userID, List<Entry> entries);
+	
 	/**
 	 * Retrieves all entries for a specific user.
 	 * 

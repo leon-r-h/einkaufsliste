@@ -20,6 +20,7 @@ public interface ProductRepository {
 
 	List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categories, String[] brand);
 	
+	List<String> brands();
 	
 	/**
 	 * Searches for a product by ID.
