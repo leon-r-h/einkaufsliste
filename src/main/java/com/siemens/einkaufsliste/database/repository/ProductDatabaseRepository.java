@@ -38,7 +38,9 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 	}
 
-	
+	/**
+	 * Gibt alle vorhandenen Brands zurueck
+	 */
 	public List<String> brands(){
 		
 		List<String> list = new ArrayList<>();
@@ -136,8 +138,12 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	}
 
-
-	// min/max standart -1 wenn filter nicht verwendet werden soll
+	/**
+	 * Gibt eine Liste an Products nach gegebenen Filterkriterien zurueck.
+	 * Standartwerte: (searchName: "" , maxPrice: -1, minPrice: -1, categorys: null, brands: null) => alle Products
+	 *
+	 */
+	@Override
 	public List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categorys,
 			String[] brands) {
 
@@ -249,9 +255,14 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 		return list;
 	}
-
+	
+	/**
+	 * Gibt eine Liste aller Products in der DB zurueck.
+	 */
 	@Override
 	public List<Product> getProducts() {
+		return searchProducts("", -1, -1, null, null);
+		/*
 		List<Product> list = new ArrayList<>();
 		try {
 			PreparedStatement ps = Database.getConnection().prepareStatement("SELECT * FROM product");
@@ -278,8 +289,12 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 
 		return list;
+		*/
 	}
 
+	/**
+	 * Gibt das Product mit der productID zurueck.
+	 */
 	@Override
 	public Optional<Product> getProduct(int productID) {
 
@@ -326,6 +341,9 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		return false;
 	}
 
+	/**
+	 * Fuegt ein Product hinzu.
+	 */
 	@Override
 	public Product addProduct(Product product) throws IllegalArgumentException {
 
@@ -371,6 +389,9 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	}
 
+	/**
+	 * entfernt das Product mit der productID.
+	 */
 	@Override
 	public void removeProduct(int productID) {
 		try {
