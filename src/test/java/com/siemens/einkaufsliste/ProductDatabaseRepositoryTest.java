@@ -291,7 +291,7 @@ public final class ProductDatabaseRepositoryTest {
     
     @Test
 	@Order(14)
-	@DisplayName("Complex Filter Search - Brand & Price")
+	@DisplayName("Filter Search - Brand & Price")
 	void testComplexSearchFilter() {
 		
 		Product hit = new Product(0, "Gaming Maus", Category.ELECTRONICS, "Logitech", 50);
@@ -318,6 +318,35 @@ public final class ProductDatabaseRepositoryTest {
 		productRepository.removeProduct(savedHit.productID());
 		productRepository.removeProduct(savedExp.productID());
 		productRepository.removeProduct(savedWrong.productID());
+	}
+    
+    
+    @Test
+	@Order(15)
+	@DisplayName("Get Unique Brands (DISTINCT Check)")
+	void testGetUniqueBrands() {
+		Product p1 = new Product(0, "Plattenspieler", Category.ELECTRONICS, "Sony", 500);
+		Product p2 = new Product(0, "Kühlschrank", Category.ELECTRONICS, "Sony", 100); // Gleiche Marke!
+		Product p3 = new Product(0, "Heißluftfriteuse", Category.HOUSEHOLD, "Miele", 900);
+
+		Product saved1 = productRepository.addProduct(p1);
+		Product saved2 = productRepository.addProduct(p2);
+		Product saved3 = productRepository.addProduct(p3);
+
+		List<String> brands = productRepository.brands();
+
+		assertNotNull(brands, "Die Liste darf nicht null sein");
+		assertFalse(brands.isEmpty(), "Die Liste sollte Einträge enthalten");
+
+		assertTrue(brands.contains("Sony"));
+		assertTrue(brands.contains("Miele"));
+
+		long sonyCount = brands.stream().filter(b -> b.equals("Sony")).count();
+		assertEquals(1, sonyCount, "Die Marke 'Sony' darf dank DISTINCT nur 1x vorkommen, auch wenn es 2 Produkte gibt.");
+
+		productRepository.removeProduct(saved1.productID());
+		productRepository.removeProduct(saved2.productID());
+		productRepository.removeProduct(saved3.productID());
 	}
     
     

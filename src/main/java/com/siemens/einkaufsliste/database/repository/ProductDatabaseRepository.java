@@ -38,6 +38,29 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 	}
 
+	
+	public List<String> brands(){
+		
+		List<String> list = new ArrayList<>();
+
+		try {
+			PreparedStatement ps = Database.getConnection()
+					.prepareStatement("SELECT DISTINCT product.brand FROM product");
+			ResultSet rs = ps.executeQuery();
+		
+			while (rs.next()) {
+				String brand = rs.getString("brand");
+				list.add(brand);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+	
+	
 	//Veraltet. In später nicht mehr benötigt stds. searchProducts nutzen
 	@Override
 	public List<Product> findProducts(Product.Category searchCategory) {
