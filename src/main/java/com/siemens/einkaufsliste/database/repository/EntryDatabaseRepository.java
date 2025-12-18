@@ -62,7 +62,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
-		final String sql = "SELECT * FROM entry WHERE userID = ?";
+		final String sql = "SELECT * FROM entry WHERE userID = ? ORDER BY checkDate IS NULL, checkDate DESC";
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)){
 			stmt.setInt(1,userID);
 			
@@ -166,7 +166,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public Entry updateQuantity(int entryID, int quantity) {
-		if (quantity < 1 || getEntry(entryID).get().checkDate() != null)
+		if (quantity < 1)
 			throw new IllegalArgumentException();
 
 		final String sql = "UPDATE entry SET quantity = ? WHERE entryID = ?";
