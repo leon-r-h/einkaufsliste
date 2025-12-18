@@ -71,7 +71,11 @@ public final class EntryUtil {
     public static void exportEntries(int userID) throws IOException {
         EntryRepository entryRepository = Database.getEntries();
         List <Entry> entries = entryRepository.getEntries(userID);
-        File file = new File("entry_exports/" + "entries_user_" + userID + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv");
+        File folder = new File("entry_exports/" + userID);
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+        File file = new File("entry_exports/" + userID + "/entries_user_" + userID + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv");
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write("entryID;userID;productID;quantity;checkDate\n");
@@ -97,7 +101,7 @@ public final class EntryUtil {
         EntryRepository entryRepository = Database.getEntries();
         entryRepository.nukeEntries(userID);
         List<Entry> entries = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("entry_exports/" + "entries_user_" + userID + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("entry_exports/" + userID + "/entries_user_" + userID + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv"))) {
             String line;
             boolean isFirstLine = true;
             while ((line = reader.readLine()) != null) {
