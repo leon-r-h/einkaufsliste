@@ -18,13 +18,30 @@
       <junit.jupiter.version>6.0.1</junit.jupiter.version>
       <mysql.connector.version>8.0.33</mysql.connector.version>
       <flatlaf.version>3.7</flatlaf.version>
+      <pdfbox.version>3.0.6</pdfbox.version>
+      <pdfbox.graphics2d.version>3.0.5</pdfbox.graphics2d.version>
   </properties>
 
   <dependencies>
+      <dependency>
+          <groupId>org.apache.pdfbox</groupId>
+          <artifactId>pdfbox</artifactId>
+          <version>${pdfbox.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>de.rototor.pdfbox</groupId>
+          <artifactId>graphics2d</artifactId>
+          <version>${pdfbox.graphics2d.version}</version>
+      </dependency>
   	  <dependency>
           <groupId>com.formdev</groupId>
           <artifactId>flatlaf</artifactId>
           <version>${flatlaf.version}</version>
+      </dependency>
+      <dependency>
+      	  <groupId>com.formdev</groupId>
+      	  <artifactId>flatlaf-extras</artifactId>
+      	  <version>${flatlaf.version}</version>
       </dependency>
 	  <dependency>
           <groupId>mysql</groupId>
