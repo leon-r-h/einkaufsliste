@@ -62,7 +62,13 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
-		final String sql = "SELECT * FROM entry WHERE userID = ? ORDER BY checkDate IS NOT NULL, checkDate ASC";
+		final String sql = """
+				SELECT entryID, userID, productID, quantity, checkDate
+				FROM entry, product
+				WHERE entry.productID = product.productID
+				AND userID = ?
+				ORDER BY checkDate IS NOT NULL, product.name ASC, checkDate ASC
+				""";
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)){
 			stmt.setInt(1,userID);
 			
@@ -267,4 +273,6 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	public int budgetTotalPriceDifference(int userID, int budget) {
 		return budget-totalPrice(userID);
 	}
+
+	
 }
