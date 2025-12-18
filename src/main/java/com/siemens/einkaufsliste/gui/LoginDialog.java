@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import com.siemens.einkaufsliste.database.model.User;
@@ -46,12 +47,12 @@ public final class LoginDialog extends JDialog {
 
         JLabel title = new JLabel("Sign in");
         title.putClientProperty("FlatLaf.styleClass", "h1");
-        title.setHorizontalAlignment(JLabel.CENTER);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         content.add(title, gbc);
 
         gbc.gridwidth = 1; gbc.gridy++;
-        content.add(new JLabel("Email:", JLabel.RIGHT), gbc);
+        content.add(new JLabel("Email:", SwingConstants.RIGHT), gbc);
 
         emailField = new JTextField(20);
         emailField.putClientProperty("JTextField.placeholderText", "user@siemens.com");
@@ -59,7 +60,7 @@ public final class LoginDialog extends JDialog {
         content.add(emailField, gbc);
 
         gbc.gridx = 0; gbc.gridy++; gbc.weightx = 0.0;
-        content.add(new JLabel("Password:", JLabel.RIGHT), gbc);
+        content.add(new JLabel("Password:", SwingConstants.RIGHT), gbc);
 
         passwordField = new JPasswordField(20);
         passwordField.putClientProperty("JTextField.placeholderText", "Password");
@@ -70,7 +71,7 @@ public final class LoginDialog extends JDialog {
         JButton signInButton = new JButton("Sign in");
         signInButton.addActionListener(e -> attemptLogin());
         signInButton.putClientProperty("FlatLaf.styleClass", "accent");
-        
+
         gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2; gbc.weightx = 0.0;
         content.add(signInButton, gbc);
         this.getRootPane().setDefaultButton(signInButton);
@@ -80,7 +81,7 @@ public final class LoginDialog extends JDialog {
 
         JPanel signUpPanel = new JPanel();
         signUpPanel.add(new JLabel("Not registered yet?"));
-        
+
         JButton signUpButton = new JButton("Sign Up");
         signUpButton.addActionListener(e -> openRegister());
         signUpPanel.add(signUpButton);

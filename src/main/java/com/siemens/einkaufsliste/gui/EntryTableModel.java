@@ -35,7 +35,9 @@ public final class EntryTableModel extends AbstractTableModel {
     }
 
     public void addEntry(Entry entry) {
-        if (userContext.getCurrentUser().isEmpty()) return;
+        if (userContext.getCurrentUser().isEmpty()) {
+			return;
+		}
 
         new SwingWorker<AddResult, Void>() {
             @Override
@@ -61,7 +63,9 @@ public final class EntryTableModel extends AbstractTableModel {
     }
 
     public void removeEntryAt(int rowIndex) {
-        if (userContext.getCurrentUser().isEmpty() || rowIndex < 0 || rowIndex >= entries.size()) return;
+        if (userContext.getCurrentUser().isEmpty() || rowIndex < 0 || rowIndex >= entries.size()) {
+			return;
+		}
 
         Entry target = entries.get(rowIndex);
 
@@ -162,7 +166,9 @@ public final class EntryTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        if (rowIndex >= entries.size()) return null;
+        if (rowIndex >= entries.size()) {
+			return null;
+		}
         Entry entry = entries.get(rowIndex);
         return switch (columnIndex) {
             case 0 -> entry.checkDate() != null;
@@ -174,7 +180,9 @@ public final class EntryTableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        if (rowIndex >= entries.size() || userContext.getCurrentUser().isEmpty()) return;
+        if (rowIndex >= entries.size() || userContext.getCurrentUser().isEmpty()) {
+			return;
+		}
 
         Entry current = entries.get(rowIndex);
 

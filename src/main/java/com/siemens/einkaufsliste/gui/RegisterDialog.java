@@ -19,6 +19,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -37,7 +38,7 @@ public final class RegisterDialog extends JDialog {
     private JTextField dateField;
     private JComboBox<Gender> genderBox;
     private JCheckBox newsletterBox;
-    
+
     private User registeredUser;
 
     private RegisterDialog(Frame parent) {
@@ -57,7 +58,7 @@ public final class RegisterDialog extends JDialog {
 
         JLabel title = new JLabel("Sign up");
         title.putClientProperty("FlatLaf.styleClass", "h1");
-        title.setHorizontalAlignment(JLabel.CENTER);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
@@ -71,11 +72,11 @@ public final class RegisterDialog extends JDialog {
         GridBagConstraints nameGbc = new GridBagConstraints();
         nameGbc.fill = GridBagConstraints.HORIZONTAL;
         nameGbc.weightx = 0.5;
-        
+
         firstNameField = new JTextField(10);
         firstNameField.putClientProperty("JTextField.placeholderText", "First Name");
         namePanel.add(firstNameField, nameGbc);
-        
+
         nameGbc.insets = new Insets(0, 5, 0, 0);
         lastNameField = new JTextField(10);
         lastNameField.putClientProperty("JTextField.placeholderText", "Last Name");
@@ -111,11 +112,11 @@ public final class RegisterDialog extends JDialog {
         GridBagConstraints detailGbc = new GridBagConstraints();
         detailGbc.fill = GridBagConstraints.HORIZONTAL;
         detailGbc.weightx = 0.6;
-        
+
         dateField = new JTextField(10);
         dateField.putClientProperty("JTextField.placeholderText", "YYYY-MM-DD");
         detailPanel.add(dateField, detailGbc);
-        
+
         detailGbc.weightx = 0.4;
         detailGbc.insets = new Insets(0, 5, 0, 0);
         genderBox = new JComboBox<>(Gender.values());
@@ -132,11 +133,11 @@ public final class RegisterDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> dispose());
-        
+
         JButton registerButton = new JButton("Register");
         registerButton.putClientProperty("FlatLaf.styleClass", "accent");
         registerButton.addActionListener(e -> attemptRegistration());
-        
+
         buttonPanel.add(cancelButton);
         buttonPanel.add(new JPanel() {{ setPreferredSize(new java.awt.Dimension(5, 0)); }});
         buttonPanel.add(registerButton);
@@ -146,7 +147,7 @@ public final class RegisterDialog extends JDialog {
         gbc.gridwidth = 2;
         gbc.insets = new Insets(15, 4, 4, 4);
         content.add(buttonPanel, gbc);
-        
+
         this.getRootPane().setDefaultButton(registerButton);
         this.add(content);
     }
@@ -169,7 +170,7 @@ public final class RegisterDialog extends JDialog {
             LocalDate birthDate = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
             User user = new User(0, first, last, birthDate, gender, email, pass, news);
             Database.getUsers().registerUser(user);
-            
+
             Optional<User> dbUser = Database.getUsers().getUser(email);
             if (dbUser.isPresent()) {
                 this.registeredUser = dbUser.get();
@@ -190,12 +191,12 @@ public final class RegisterDialog extends JDialog {
         dialog.setVisible(true);
         return Optional.ofNullable(dialog.registeredUser);
     }
-    
+
     public static void main(String[] args) {
     	FlatLightLaf.setup();
-    	
+
     	Database.connect();
-    	
+
     	System.out.println(RegisterDialog.showRegisterDialog(null));
     }
 }

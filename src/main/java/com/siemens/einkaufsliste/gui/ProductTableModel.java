@@ -21,7 +21,7 @@ public final class ProductTableModel extends AbstractTableModel {
 	private final ProductRepository productRepository;
 
 	private SwingWorker<List<Product>, Void> activeWorker;
-	
+
 	private String currentQuery = null;
 
 	public ProductTableModel(ProductRepository productRepository) {
@@ -42,7 +42,7 @@ public final class ProductTableModel extends AbstractTableModel {
 				if (isCancelled()) {
 					return null;
 				}
-				
+
 				if (query == null || query.isBlank()) {
 					return new ArrayList<>(productRepository.getProducts());
 				} else {

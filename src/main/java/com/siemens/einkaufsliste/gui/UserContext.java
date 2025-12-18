@@ -6,7 +6,7 @@ import com.siemens.einkaufsliste.database.model.User;
 
 @FunctionalInterface
 public interface UserContext {
-	
+
 	Optional<User> getCurrentUser();
 
 }

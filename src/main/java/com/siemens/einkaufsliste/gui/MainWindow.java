@@ -29,6 +29,7 @@ import javax.swing.WindowConstants;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.extras.FlatSVGUtils;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
@@ -66,17 +67,19 @@ public final class MainWindow implements UserContext {
     private JSpinner quantitySpinner;
     private JTable shoppingListTable;
     private EntryTableModel shoppingListModel;
-    
+
     private void initializeInterface() {
         FlatDarkLaf.setup();
 
         frame = new JFrame("Formula Emendi");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
+        frame.setIconImages( FlatSVGUtils.createWindowIconImages(getClass().getResource("/com/siemens/einkaufsliste/gui/logo.svg")));
+
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setSize(screenSize.width / 2, screenSize.height / 2);
         frame.setLocationRelativeTo(null);
-        
+
         frame.add(createToolBar(), BorderLayout.NORTH);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createProductSearchField(),
@@ -86,33 +89,33 @@ public final class MainWindow implements UserContext {
         splitPane.setDividerLocation(0.5);
 
         frame.add(splitPane, BorderLayout.CENTER);
-        
+
         refresh();
-        
+
         frame.setVisible(true);
     }
-    
+
     private JToolBar createToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.putClientProperty("ToolBar.floatable", false);
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
-        
+
         DynamicAuthButton authButton = new DynamicAuthButton();
         authButton.addActionListener(e -> toggleAuth());
         toolBar.add(authButton);
-        
+
         toolBar.addSeparator();
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.setIcon(new FlatSVGIcon(getClass().getResource("/com/siemens/einkaufsliste/gui/refresh.svg")));
         refreshButton.addActionListener(e -> refresh());
-        frame.getRootPane().registerKeyboardAction(e -> refresh(), 
-                KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), 
+        frame.getRootPane().registerKeyboardAction(e -> refresh(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0),
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        
+
         toolBar.add(refreshButton);
-        
+
         return toolBar;
     }
 
@@ -140,7 +143,7 @@ public final class MainWindow implements UserContext {
         productTable.setFillsViewportHeight(true);
         productTable.getColumnModel().getColumn(3).setCellRenderer(new PriceCellRenderer());
         productTable.setDragEnabled(true);
-        
+
         productTable.setTransferHandler(new TransferHandler() {
             @Override
             public int getSourceActions(JComponent component) {
@@ -153,7 +156,9 @@ public final class MainWindow implements UserContext {
                 if (rowIndex != -1) {
                     int modelRow = productTable.convertRowIndexToModel(rowIndex);
                     Product p = productModel.getProductAt(modelRow);
-                    if (p != null) return new ProductTransferable(p);
+                    if (p != null) {
+						return new ProductTransferable(p);
+					}
                 }
                 return null;
             }
@@ -190,7 +195,7 @@ public final class MainWindow implements UserContext {
         shoppingListTable.setRowHeight(ROW_HEIGHT);
         shoppingListTable.setFillsViewportHeight(true);
         shoppingListTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        
+
         shoppingListTable.setTransferHandler(new TransferHandler() {
             @Override
             public boolean canImport(TransferSupport support) {
@@ -199,7 +204,9 @@ public final class MainWindow implements UserContext {
 
             @Override
             public boolean importData(TransferSupport support) {
-                if (!canImport(support)) return false;
+                if (!canImport(support)) {
+					return false;
+				}
                 try {
                     Product product = (Product) support.getTransferable().getTransferData(ProductTransferable.PRODUCT_FLAVOR);
                     addProductToEntries(product);
@@ -244,7 +251,7 @@ public final class MainWindow implements UserContext {
             JOptionPane.showMessageDialog(frame, "Please log in to add items.", "Login Required", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+
         int selectedRow = productTable.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(frame, "Please select a product first.", frame.getTitle(), JOptionPane.INFORMATION_MESSAGE);
@@ -260,8 +267,10 @@ public final class MainWindow implements UserContext {
     }
 
     private void addProductToEntries(Product product) {
-        if (currentUser.isEmpty()) return;
-        
+        if (currentUser.isEmpty()) {
+			return;
+		}
+
         int quantity = (int) quantitySpinner.getValue();
         Entry newEntry = new Entry(0, currentUser.get().userID(), product.productID(), quantity, null);
         shoppingListModel.addEntry(newEntry);
@@ -269,14 +278,16 @@ public final class MainWindow implements UserContext {
     }
 
     private void removeSelectedEntry() {
-        if (currentUser.isEmpty()) return;
+        if (currentUser.isEmpty()) {
+			return;
+		}
 
         int selectedRow = shoppingListTable.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(frame, "Please select an entry to remove.", frame.getTitle(), JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        
+
         int modelRow = shoppingListTable.convertRowIndexToModel(selectedRow);
         shoppingListModel.removeEntryAt(modelRow);
     }
@@ -284,13 +295,13 @@ public final class MainWindow implements UserContext {
     private void refresh() {
         productModel.reloadData();
         shoppingListModel.reloadData();
-        
-        frame.revalidate(); 
+
+        frame.revalidate();
         frame.repaint();
     }
 
     private class DynamicHeaderLabel extends JLabel {
-    	
+
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -303,13 +314,13 @@ public final class MainWindow implements UserContext {
                 .orElse("Formula Emendi");
         }
     }
-    
+
     private class DynamicAuthButton extends JButton {
-    	
+
 		private static final long serialVersionUID = 1L;
-		
+
 		@Override
-        public String getText() {			
+        public String getText() {
             return (currentUser != null && currentUser.isPresent()) ? "Sign out" : "Sign in";
         }
     }

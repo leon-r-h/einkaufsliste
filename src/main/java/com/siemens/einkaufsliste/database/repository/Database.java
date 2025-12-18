@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public final class Database {
 
 	private Database() {
-
+		
 	}
 	
 	private static final String URL_BASE = "jdbc:mysql://tramspotters.ddnss.de/Gruppe1";
