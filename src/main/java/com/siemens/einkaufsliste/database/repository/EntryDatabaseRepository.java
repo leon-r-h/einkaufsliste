@@ -195,8 +195,8 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public Entry addEntry(Entry entry) {
-		// Wirf Exception, wenn die Menge ungültig ist oder das Entry schon ein checkDate hat (beides nicht erlaubt beim Anlegen)
-		if (entry.quantity() < 1 || entry.checkDate() != null)
+		// Wirf Exception, wenn die Menge ungültig ist
+		if (entry.quantity() < 1)
 			throw new IllegalArgumentException(); // Ungültige Eingabedaten
 
 		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
@@ -205,7 +205,10 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			stmt.setInt(1, entry.userID());
 			stmt.setInt(2, entry.productID());
 			stmt.setInt(3, entry.quantity());
-			stmt.setDate(4, null); // checkDate ist beim Anlegen immer null
+			if (entry.checkDate()==null)
+				stmt.setDate(4, null);
+			else
+				stmt.setDate(4, Date.valueOf(entry.checkDate()));
 			
 			int affectedRows = stmt.executeUpdate();
 
