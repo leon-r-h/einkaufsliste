@@ -7,6 +7,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.siemens.einkaufsliste.database.model.Entry;
@@ -17,32 +21,60 @@ public final class EntryUtil {
 
     /* Testing Main Method */
     
-    public static void main(String[] args) {
+    // public static void main(String[] args) {
 
         
-        Database.connect();
-        File file = new File ("../../../../../../../test/java/com/siemens/einkaufsliste/exports/testfile.csv");
-        EntryRepository entryRepository = Database.getEntries();
-        Entry e1 = entryRepository.addEntry(new Entry(-1, 1, 100, 1, null));
-        Entry e2 = entryRepository.addEntry(new Entry(-1, 3, 101, 2, null));
-        Entry e3 = entryRepository.addEntry(new Entry(-1, 1, 102, 10,  null));
-        Entry e4 = entryRepository.addEntry(new Entry(-1, 1, 104, 2, null));
+    //     Database.connect();
+        
+    //     int userID = 1;
+    //     EntryRepository entryRepository = Database.getEntries();
+        
+    //     entryRepository.nukeEntries(1);
+    //     entryRepository.nukeEntries(3);
+        
+    //     Entry e1 = entryRepository.addEntry(new Entry(-1, 1, 100, 1, null));
+    //     Entry e2 = entryRepository.addEntry(new Entry(-1, 3, 101, 2, null));
+    //     Entry e3 = entryRepository.addEntry(new Entry(-1, 1, 102, 10,  null));
+    //     Entry e4 = entryRepository.addEntry(new Entry(-1, 1, 104, 2, null));
 
-        entryRepository.checkEntry(e3.entryID());
-        entryRepository.checkEntry(e4.entryID());
+    //     entryRepository.checkEntry(e3.entryID());
+    //     entryRepository.checkEntry(e4.entryID());
+
+
+    //     try {exportEntries(1);}
+    //     catch (IOException e) {e.printStackTrace();}
+
+
+
+    //     // Load entries from file Test
+    //     List<Entry> loadedEntries = null;
+    //     try {
+    //         loadedEntries = importEntries(1);
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+
+    //     if (loadedEntries != null) {
+    //         for (Entry entry : loadedEntries) {
+    //             System.out.println("Loaded Entry: " + entry);
+    //         }
+    //     }
 
         
-        try {saveEntriesToFile(1, file);}
-        catch (IOException e) {e.printStackTrace();}
-        Database.disconnect();
-    }
+    //     entryRepository.nukeEntries(1);
+    //     entryRepository.nukeEntries(3);
+
+    //     Database.disconnect();
+    // }
     
     
-    public static void saveEntriesToFile(int userID, File file) throws IOException {
+    public static void exportEntries(int userID) throws IOException {
         EntryRepository entryRepository = Database.getEntries();
         List <Entry> entries = entryRepository.getEntries(userID);
+        File file = new File("entry_exports/" + "entries_user_" + userID + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv");
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write("entryID;userID;productID;quantity;checkDate\n");
             for (Entry entry : entries) {
                 if (entry.checkDate() != null) {
                     writer.write(entry.entryID() + ";" + entry.userID() + ";" + entry.productID() + ";" + entry.quantity() + ";" + entry.checkDate().toString());
@@ -54,13 +86,25 @@ public final class EntryUtil {
         }
     }
 
-    public static List<Entry> loadEntriesfromFile(int userID, File file) throws IOException {
-        EntryRepository entryRepository = Database.getEntries();
-        List<Entry> entries = entryRepository.getEntries(userID);
+    /**
+     * 
+     * @param userID The ID of the user whose entries are to be loaded
+     * @return List of Entries loaded from the given file
+     * @throws IOException
+     */
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+    public static List<Entry> importEntries(int userID) throws IOException {
+        EntryRepository entryRepository = Database.getEntries();
+        entryRepository.nukeEntries(userID);
+        List<Entry> entries = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("entry_exports/" + "entries_user_" + userID + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv"))) {
             String line;
+            boolean isFirstLine = true;
             while ((line = reader.readLine()) != null) {
+                if (isFirstLine) {
+                    isFirstLine = false;
+                    continue; // Skip header line
+                }
                 String[] attributes = line.split(";");
                 int entryID = Integer.parseInt(attributes[0]);
                 int newUserID = Integer.parseInt(attributes[1]);
@@ -71,7 +115,7 @@ public final class EntryUtil {
                     checkDate = LocalDate.parse(attributes[4]);
                 entries.add(new Entry(entryID, newUserID, productID, quantity, checkDate));
             }
-            return entries;
+            return Collections.unmodifiableList(entries);
         }
     }
 }
