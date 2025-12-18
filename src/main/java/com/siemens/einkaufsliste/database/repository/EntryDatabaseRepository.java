@@ -62,7 +62,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
-		final String sql = "SELECT * FROM entry WHERE userID = ? ORDER BY checkDate IS NULL, checkDate DESC";
+		final String sql = "SELECT * FROM entry WHERE userID = ? ORDER BY checkDate IS NOT NULL, checkDate ASC";
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)){
 			stmt.setInt(1,userID);
 			
