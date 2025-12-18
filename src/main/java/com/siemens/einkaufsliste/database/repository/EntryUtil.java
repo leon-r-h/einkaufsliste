@@ -1,16 +1,11 @@
 package com.siemens.einkaufsliste.database.repository;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,21 +13,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
-
-import java.awt.*;
-import java.awt.desktop.UserSessionListener;
-
-import org.apache.pdfbox.pdmodel.font.PDFont;
 
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.User;
-
-import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
-import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2DFontTextDrawer;
 
 public final class EntryUtil {
 
@@ -63,21 +49,6 @@ public final class EntryUtil {
         try {exportEntriesAsCsv(1);}
         catch (IOException e) {e.printStackTrace();}
 
-
-
-        // Load entries from file Test
-        List<Entry> loadedEntries = null;
-        try {
-            loadedEntries = importEntriesFromCsv(1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (loadedEntries != null) {
-            for (Entry entry : loadedEntries) {
-                System.out.println("Loaded Entry: " + entry);
-            }
-        }
 
         try {
          exportEntriesAsPdf(userID);   
@@ -122,31 +93,6 @@ public final class EntryUtil {
      * @throws IOException
      */
 
-    public static List<Entry> importEntriesFromCsv(int userID) throws IOException {
-        EntryRepository entryRepository = Database.getEntries();
-        entryRepository.nukeEntries(userID);
-        List<Entry> entries = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("entry_exports/" + userID + "/csv/entries_user_" + userID + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv"))) {
-            String line;
-            boolean isFirstLine = true;
-            while ((line = reader.readLine()) != null) {
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    continue; // Skip header line
-                }
-                String[] attributes = line.split(";");
-                int entryID = Integer.parseInt(attributes[0]);
-                int newUserID = Integer.parseInt(attributes[1]);
-                int productID = Integer.parseInt(attributes[2]);
-                int quantity = Integer.parseInt(attributes[3]);
-                LocalDate checkDate = null;
-                if (!attributes[4].equals("-"))
-                    checkDate = LocalDate.parse(attributes[4]);
-                entries.add(entryRepository.addEntry(new Entry(entryID, newUserID, productID, quantity, checkDate)));
-            }
-            return Collections.unmodifiableList(entries);
-        }
-    }
 
     public static void exportEntriesAsPdf(int userID) throws IOException {
         EntryRepository entryRepository = Database.getEntries();
