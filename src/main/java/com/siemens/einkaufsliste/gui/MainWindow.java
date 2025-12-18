@@ -58,7 +58,7 @@ public final class MainWindow implements UserContext {
 		return currentUser;
 	}
 
-	private static final int ROW_HEIGHT = 24;
+	private static final int ROW_HEIGHT = 36;
 
 	private JFrame frame;
 	private JTable productTable;

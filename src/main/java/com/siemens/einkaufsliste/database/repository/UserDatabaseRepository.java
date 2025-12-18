@@ -20,80 +20,69 @@ public final class UserDatabaseRepository implements UserRepository {
 	private void createIfNonExistent() {
 		final String sql = """
 				CREATE TABLE IF NOT EXISTS user (
-				                userID INT AUTO_INCREMENT PRIMARY KEY,
-				                firstName VARCHAR(255),
-				                lastName VARCHAR(255),
-				                birthDate DATE,
-				                gender VARCHAR(50),
-				                email VARCHAR(255) UNIQUE,
-				                password VARCHAR(255),
-				                newsletter BOOLEAN
-				            )
+				    userID INT AUTO_INCREMENT PRIMARY KEY,
+				    firstName VARCHAR(255),
+				    lastName VARCHAR(255),
+				    birthDate DATE,
+				    gender VARCHAR(50),
+				    email VARCHAR(255) UNIQUE,
+				    password VARCHAR(255),
+				    newsletter BOOLEAN
+				)
 				""";
-
-		try {
-			Connection connection = Database.getConnection();
-			Statement statement = connection.createStatement();
+		try (Connection connection = Database.getConnection(); Statement statement = connection.createStatement()) {
 			statement.execute(sql);
 		} catch (SQLException e) {
-			e.printStackTrace(); // TODO:
+			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public Optional<User> getUser(int userID) {
 		final String sql = "SELECT * FROM user WHERE userId= ?";
-
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setInt(1, userID);
-
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
 					return Optional.of(mapToUser(resultSet));
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); // TOOD:
+			e.printStackTrace();
 		}
-
 		return Optional.empty();
 	}
 
 	@Override
 	public Optional<User> getUser(String email) {
 		final String sql = "SELECT * FROM user WHERE email = ?";
-
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setString(1, email);
-
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
 					return Optional.of(mapToUser(resultSet));
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); // TODO:
+			e.printStackTrace();
 		}
-
 		return Optional.empty();
 	}
 
 	@Override
 	public boolean existsByEmail(String email) {
 		final String sql = "SELECT 1 FROM user WHERE email = ?";
-
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setString(1, email);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return resultSet.next();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); // TODO:
+			e.printStackTrace();
 		}
-
 		return false;
 	}
 
@@ -110,8 +99,9 @@ public final class UserDatabaseRepository implements UserRepository {
 
 		final String sql = "INSERT INTO user (firstName, lastName, birthDate, gender, email, password, newsletter) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql,
-				Statement.RETURN_GENERATED_KEYS)) {
+		try (Connection connection = Database.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(sql,
+						Statement.RETURN_GENERATED_KEYS)) {
 
 			preparedStatement.setString(1, user.firstName());
 			preparedStatement.setString(2, user.lastName());
@@ -122,7 +112,6 @@ public final class UserDatabaseRepository implements UserRepository {
 			preparedStatement.setBoolean(7, user.newsLetter());
 
 			int affectedRows = preparedStatement.executeUpdate();
-
 			if (affectedRows == 0) {
 				throw new IllegalArgumentException();
 			}
@@ -130,7 +119,6 @@ public final class UserDatabaseRepository implements UserRepository {
 			try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
 				if (generatedKeys.next()) {
 					int newID = generatedKeys.getInt(1);
-
 					return new User(newID, user.firstName(), user.lastName(), user.birthDate(), user.gender(),
 							user.email(), user.password(), user.newsLetter());
 				} else {
@@ -146,25 +134,21 @@ public final class UserDatabaseRepository implements UserRepository {
 	@Override
 	public boolean deleteUser(int userID) {
 		final String sql = "DELETE FROM user WHERE userID = ?";
-
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setInt(1, userID);
-			int rowsAffected = preparedStatement.executeUpdate();
-			return rowsAffected > 0;
-
+			return preparedStatement.executeUpdate() > 0;
 		} catch (SQLException e) {
-			e.printStackTrace(); // TODO:
+			e.printStackTrace();
 		}
-
 		return false;
 	}
 
 	@Override
 	public void updateUser(User user) {
 		final String sql = "UPDATE user SET firstName=?, lastName=?, birthDate=?, gender=?, email=?, password=?, newsletter=? WHERE userID=?";
-
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
+		try (Connection connection = Database.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setString(1, user.firstName());
 			preparedStatement.setString(2, user.lastName());
 			preparedStatement.setDate(3, Date.valueOf(user.birthDate()));
@@ -174,12 +158,11 @@ public final class UserDatabaseRepository implements UserRepository {
 			preparedStatement.setBoolean(7, user.newsLetter());
 			preparedStatement.setInt(8, user.userID());
 
-			int rowsAffected = preparedStatement.executeUpdate();
-			if (rowsAffected == 0) {
+			if (preparedStatement.executeUpdate() == 0) {
 				throw new IllegalArgumentException();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); // TODO:
+			e.printStackTrace();
 		}
 	}
 
@@ -188,5 +171,4 @@ public final class UserDatabaseRepository implements UserRepository {
 				resultSet.getDate("birthDate").toLocalDate(), Gender.values()[resultSet.getInt("gender")],
 				resultSet.getString("email"), resultSet.getString("password"), resultSet.getBoolean("newsletter"));
 	}
-
 }

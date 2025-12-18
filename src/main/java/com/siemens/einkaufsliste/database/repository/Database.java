@@ -1,8 +1,10 @@
 package com.siemens.einkaufsliste.database.repository;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public final class Database {
 
@@ -14,7 +16,7 @@ public final class Database {
 	private static final String USER_NAME = "user1";
 	private static final String USER_PASSWORD = "passwort1";
 
-	private static Connection connection;
+	private static HikariDataSource dataSource;
 
 	private static UserRepository users;
 	private static ProductRepository products;
@@ -69,38 +71,42 @@ public final class Database {
 	 * @throws RuntimeException      If another error occurs.
 	 */
 	public static void connect() {
-		try {
-			if (connection != null && !connection.isClosed()) {
-				throw new IllegalStateException();
-			}
-
-			connection = DriverManager.getConnection(URL_BASE, USER_NAME, USER_PASSWORD);
-
-			users = new UserDatabaseRepository();
-			products = new ProductDatabaseRepository();
-			entries = new EntryDatabaseRepository();
-		} catch (SQLException e) {
-			throw new RuntimeException();
+		if (dataSource != null && !dataSource.isClosed()) {
+			throw new IllegalStateException();
 		}
+
+		HikariConfig config = new HikariConfig();
+		config.setJdbcUrl(URL_BASE);
+		config.setUsername(USER_NAME);
+		config.setPassword(USER_PASSWORD);
+
+		config.setMaximumPoolSize(10);
+		config.setMinimumIdle(2);
+		config.setIdleTimeout(30000);
+		config.setConnectionTimeout(20000);
+		config.setPoolName("FormulaEmendiPool");
+
+		dataSource = new HikariDataSource(config);
+
+		users = new UserDatabaseRepository();
+		products = new ProductDatabaseRepository();
+		entries = new EntryDatabaseRepository();
 	}
 
 	/**
 	 * Returns the existing connection.
 	 *
 	 * @return The active {@link Connection}
+	 * @throws SQLException
 	 * @throws IllegalStateException If no connection exists or the connection is
 	 *                               closed
 	 */
-	public static Connection getConnection() {
-		try {
-			if (connection == null || connection.isClosed()) {
-				throw new IllegalStateException();
-			}
-		} catch (SQLException e) {
+	public static Connection getConnection() throws SQLException {
+		if (dataSource == null || dataSource.isClosed()) {
 			throw new IllegalStateException();
 		}
 
-		return connection;
+		return dataSource.getConnection();
 	}
 
 	/**
@@ -110,21 +116,18 @@ public final class Database {
 	 *                               connection.
 	 */
 	public static void disconnect() {
-		if (connection == null) {
+		System.out.println(dataSource);
+
+		if (dataSource == null || dataSource.isClosed()) {
 			throw new IllegalStateException();
 		}
 
-		try {
-			connection.close();
-		} catch (SQLException e) {
-			throw new IllegalStateException();
-		}
+		dataSource.close();
+		dataSource = null;
 
 		users = null;
 		products = null;
 		entries = null;
-
-		connection = null;
 
 		System.gc();
 	}

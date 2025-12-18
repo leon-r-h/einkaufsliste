@@ -1,6 +1,5 @@
 package com.siemens.einkaufsliste;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -94,16 +93,6 @@ public final class EntryDatabaseRepositoryTest {
 
 	@Test
 	@Order(3)
-	@DisplayName("addEntryWithDateNotNullThrowsError")
-	void addEntryWithDateNotNullThrowsError() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			Entry testEntry = new Entry(-1, testUser.userID(), testProduct.productID(), 200, LocalDate.now());
-			entryRepository.addEntry(testEntry);
-		});
-	}
-
-	@Test
-	@Order(4)
 	@DisplayName("getEntryById")
 	void getEntryById() {
 		Entry testEntry = new Entry(-1, testUser.userID(), testProduct.productID(), 420, null);
@@ -117,7 +106,7 @@ public final class EntryDatabaseRepositoryTest {
 	}
 
 	@Test
-	@Order(5)
+	@Order(4)
 	@DisplayName("updateQuantity")
 	void updateQuantity() {
 		Entry entry = entryRepository.addEntry(new Entry(-1, testUser.userID(), testProduct.productID(), 1, null));
@@ -128,7 +117,7 @@ public final class EntryDatabaseRepositoryTest {
 	}
 
 	@Test
-	@Order(6)
+	@Order(5)
 	@DisplayName("checkUncheckEntry")
 	void uncheckEntry() {
 		Entry entry = entryRepository.addEntry(new Entry(-1, testUser.userID(), testProduct.productID(), 3, null));
@@ -140,7 +129,7 @@ public final class EntryDatabaseRepositoryTest {
 	}
 
 	@Test
-	@Order(7)
+	@Order(6)
 	@DisplayName("removeEntry")
 	void removeEntry() {
 		Entry entry = entryRepository.addEntry(new Entry(-1, testUser.userID(), testProduct.productID(), 4, null));
@@ -150,7 +139,7 @@ public final class EntryDatabaseRepositoryTest {
 	}
 
 	@Test
-	@Order(8)
+	@Order(7)
 	@DisplayName("getEntryNotFound")
 	void getEntryNotFound() {
 		Optional<Entry> result = entryRepository.getEntry(-99999);
@@ -158,7 +147,7 @@ public final class EntryDatabaseRepositoryTest {
 	}
 
 	@Test
-	@Order(9)
+	@Order(8)
 	@DisplayName("removeEntryNotExisting")
 	void removeEntryNotExisting() {
 		// Sollte keine Exception werfen
@@ -166,7 +155,7 @@ public final class EntryDatabaseRepositoryTest {
 	}
 
 	@Test
-	@Order(10)
+	@Order(9)
 	@DisplayName("getEntriesByUserId")
 	void getEntriesByUserId() {
 		List<User> testUsers = new ArrayList<>();

@@ -28,15 +28,12 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				     productID INT NOT NULL,
 				     quantity INT,
 				     checkDate DATE,
-
 				     FOREIGN KEY (userID) REFERENCES user(userID) ON DELETE CASCADE,
 				     FOREIGN KEY (productID) REFERENCES product(productID)
 				 )
 				""";
 
-		try {
-			Connection connection = Database.getConnection();
-			Statement statement = connection.createStatement();
+		try (Connection connection = Database.getConnection(); Statement statement = connection.createStatement()) {
 			statement.execute(sql);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -45,15 +42,11 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public void nukeEntries(int userID) {
-		final String sql = """
-				DELETE FROM entry
-				WHERE userID = ?
-				""";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, userID);
-
-			stmt.executeUpdate();
+		final String sql = "DELETE FROM entry WHERE userID = ?";
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, userID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -69,12 +62,12 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				AND userID = ?
 				ORDER BY checkDate IS NOT NULL, product.name ASC, checkDate ASC
 				""";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, userID);
-
-			try (ResultSet rs = stmt.executeQuery()) {
-				while (rs.next()) {
-					entries.add(mapToEntry(rs));
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, userID);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				while (resultSet.next()) {
+					entries.add(mapToEntry(resultSet));
 				}
 			}
 		} catch (SQLException e) {
@@ -92,19 +85,16 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				AND entry.userID = user.userID
 				AND userID = ?
 				""";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, userID);
-
-			try (ResultSet rs = stmt.executeQuery()) {
-				if (rs.next()) {
-					return rs.getInt(1);
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, userID);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getInt(1);
 				}
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
-			throw new IllegalArgumentException();
 		}
 		return 0;
 	}
@@ -112,10 +102,10 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public Optional<Entry> getEntry(int entryID) {
 		final String sql = "SELECT * FROM entry WHERE entryID= ?";
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
-			preparedStatement.setInt(1, entryID);
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, entryID);
+			try (ResultSet resultSet = statement.executeQuery()) {
 				if (resultSet.next()) {
 					return Optional.of(mapToEntry(resultSet));
 				}
@@ -123,52 +113,38 @@ public final class EntryDatabaseRepository implements EntryRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
 		return Optional.empty();
 	}
 
 	@Override
 	public Entry checkEntry(int entryID) {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-
-			stmt.setDate(1, Date.valueOf(LocalDate.now()));
-			stmt.setInt(2, entryID);
-
-			stmt.executeUpdate();
-
-			Optional<Entry> entryOptional = getEntry(entryID);
-			if (!entryOptional.isPresent()) {
-				throw new IllegalArgumentException();
-			}
-			return entryOptional.get();
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setDate(1, Date.valueOf(LocalDate.now()));
+			statement.setInt(2, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
+			throw new IllegalArgumentException();
 		}
-		throw new IllegalArgumentException();
+
+		return getEntry(entryID).orElseThrow(IllegalArgumentException::new);
 	}
 
 	@Override
 	public Entry uncheckEntry(int entryID) {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-
-			stmt.setDate(1, null);
-			stmt.setInt(2, entryID);
-
-			stmt.executeUpdate();
-
-			Optional<Entry> entryOptional = getEntry(entryID);
-			if (!entryOptional.isPresent()) {
-				throw new IllegalArgumentException();
-			}
-			return entryOptional.get();
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setDate(1, null);
+			statement.setInt(2, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
+			throw new IllegalArgumentException();
 		}
-		throw new IllegalArgumentException();
+		return getEntry(entryID).orElseThrow(IllegalArgumentException::new);
 	}
 
 	@Override
@@ -178,97 +154,77 @@ public final class EntryDatabaseRepository implements EntryRepository {
 		}
 
 		final String sql = "UPDATE entry SET quantity = ? WHERE entryID = ?";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, quantity);
-			stmt.setInt(2, entryID);
-
-			stmt.executeUpdate();
-			Optional<Entry> entryOptional = getEntry(entryID);
-			if (!entryOptional.isPresent()) {
-				throw new IllegalArgumentException();
-			}
-			return entryOptional.get();
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, quantity);
+			statement.setInt(2, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
+			throw new IllegalArgumentException();
 		}
-		throw new IllegalArgumentException();
+
+		return getEntry(entryID).orElseThrow(IllegalArgumentException::new);
 	}
 
 	@Override
 	public Entry addEntry(Entry entry) {
-		// Wirf Exception, wenn die Menge ungültig ist
 		if (entry.quantity() < 1) {
-			throw new IllegalArgumentException(); // Ungültige Eingabedaten
+			throw new IllegalArgumentException();
 		}
 
 		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
 
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-			stmt.setInt(1, entry.userID());
-			stmt.setInt(2, entry.productID());
-			stmt.setInt(3, entry.quantity());
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+			statement.setInt(1, entry.userID());
+			statement.setInt(2, entry.productID());
+			statement.setInt(3, entry.quantity());
 			if (entry.checkDate() == null) {
-				stmt.setDate(4, null);
+				statement.setDate(4, null);
 			} else {
-				stmt.setDate(4, Date.valueOf(entry.checkDate()));
+				statement.setDate(4, Date.valueOf(entry.checkDate()));
 			}
 
-			int affectedRows = stmt.executeUpdate();
-
+			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
-				throw new IllegalArgumentException(); // Es wurde kein Datensatz eingefügt
+				throw new IllegalArgumentException();
 			}
 
-			try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+			try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
 				if (generatedKeys.next()) {
 					int newID = generatedKeys.getInt(1);
-
 					return new Entry(newID, entry.userID(), entry.productID(), entry.quantity(), entry.checkDate());
-
 				} else {
-					throw new IllegalArgumentException(); // Es wurde kein neuer Schlüssel generiert
+					throw new IllegalArgumentException();
 				}
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
-			throw new IllegalArgumentException(); // SQL-Fehler beim Einfügen
+			throw new IllegalArgumentException();
 		}
 	}
 
 	@Override
 	public void removeEntry(int entryID) {
 		final String sql = "DELETE FROM entry WHERE entryID = ?";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, entryID);
-
-			stmt.executeUpdate();
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private Entry mapToEntry(ResultSet rs) throws SQLException {
-		if (rs.getDate("checkDate") == null) {
-			return new Entry(rs.getInt("entryID"), rs.getInt("userID"), rs.getInt("productID"), rs.getInt("quantity"),
-					null);
+	private Entry mapToEntry(ResultSet resultSet) throws SQLException {
+		if (resultSet.getDate("checkDate") == null) {
+			return new Entry(resultSet.getInt("entryID"), resultSet.getInt("userID"), resultSet.getInt("productID"),
+					resultSet.getInt("quantity"), null);
 		} else {
-			return new Entry(rs.getInt("entryID"), rs.getInt("userID"), rs.getInt("productID"), rs.getInt("quantity"),
-					rs.getDate("checkDate").toLocalDate());
+			return new Entry(resultSet.getInt("entryID"), resultSet.getInt("userID"), resultSet.getInt("productID"),
+					resultSet.getInt("quantity"), resultSet.getDate("checkDate").toLocalDate());
 		}
 	}
-
-	/**
-	 *
-	 * Returns a positive int if budget is not exceeded by returned value. Returns a
-	 * negative int if budget is exceeded by returned value.
-	 *
-	 */
-	public int budgetTotalPriceDifference(int userID, int budget) {
-		return budget - totalPrice(userID);
-	}
-
 }
