@@ -23,6 +23,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.WindowConstants;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
@@ -34,7 +35,7 @@ import com.siemens.einkaufsliste.database.repository.Database;
 public final class MainWindow {
 
 	public static void main(String[] args) {
-		FlatLightLaf.setup();
+		FlatDarkLaf.setup();
 		new MainWindow();
 	}
 
@@ -155,7 +156,7 @@ public final class MainWindow {
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
 		String userName = currentUser.firstName();
-		listTitleLabel = new JLabel(userName + "'s Shopping List");
+		listTitleLabel = new JLabel(userName + "'s Formula Emendi");
 		listTitleLabel.putClientProperty("FlatLaf.styleClass", "h1");
 		listTitleLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
