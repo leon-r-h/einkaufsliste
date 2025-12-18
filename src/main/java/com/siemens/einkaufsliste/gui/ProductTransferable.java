@@ -1,4 +1,4 @@
-package com.siemens.einkaufsliste.ngui;
+package com.siemens.einkaufsliste.gui;
 
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
