@@ -28,7 +28,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 				CREATE TABLE IF NOT EXISTS product (
 				    productID INT AUTO_INCREMENT PRIMARY KEY,
 				    name VARCHAR(255),
-				    category INT,
+				    category VARCHAR(50),
 				    brand VARCHAR(255),
 				    price INT
 				);
@@ -79,7 +79,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 				WHERE (? IS NULL OR (LOWER(name) LIKE ? OR SOUNDEX(name) LIKE CONCAT(TRIM(TRAILING '0' FROM SOUNDEX(?)), '%')))
 				AND (? = -1 OR price <= ?)
 				AND (? = -1 OR price >= ?)
-				AND (? = -1 OR category = ?)
+				AND (? IS NULL OR category = ?)
 				AND (? IS NULL OR brand = ?)
 				ORDER BY name ASC
 				""";
@@ -87,7 +87,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		List<Product> list = new ArrayList<>();
 		String rawName = (searchName != null && !searchName.isBlank()) ? searchName : null;
 		String likeName = (rawName != null) ? "%" + rawName.toLowerCase() + "%" : null;
-		int catVal = (categories != null && categories.length > 0) ? categories[0].ordinal() : -1;
+		String catVal = (categories != null && categories.length > 0) ? categories[0].name() : null;
 		String brandVal = (brands != null && brands.length > 0) ? brands[0] : null;
 
 		try (Connection connection = Database.getConnection();
@@ -107,8 +107,13 @@ public final class ProductDatabaseRepository implements ProductRepository {
 			statement.setInt(5, maxPrice);
 			statement.setInt(6, minPrice);
 			statement.setInt(7, minPrice);
-			statement.setInt(8, catVal);
-			statement.setInt(9, catVal);
+			if (catVal == null) {
+				statement.setNull(8, Types.VARCHAR);
+				statement.setNull(9, Types.VARCHAR);
+			} else {
+				statement.setString(8, catVal);
+				statement.setString(9, catVal);
+			}
 
 			if (brandVal == null) {
 				statement.setNull(10, Types.VARCHAR);
@@ -184,7 +189,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 						Statement.RETURN_GENERATED_KEYS)) {
 
 			preparedStatement.setString(1, product.name());
-			preparedStatement.setInt(2, product.category().ordinal());
+			preparedStatement.setString(2, product.category().name());
 			preparedStatement.setString(3, product.brand());
 			preparedStatement.setInt(4, product.price());
 
@@ -221,7 +226,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	private Product mapToProduct(ResultSet resultSet) throws SQLException {
 		return new Product(resultSet.getInt("productID"), resultSet.getString("name"),
-				Category.values()[resultSet.getInt("category")], resultSet.getString("brand"),
+				Category.valueOf(resultSet.getString("category")), resultSet.getString("brand"),
 				resultSet.getInt("price"));
 	}
 }

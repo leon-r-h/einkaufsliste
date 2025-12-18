@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.siemens.einkaufsliste.database.model.Entry;
+import com.siemens.einkaufsliste.database.model.ShoppingListItem;
 
 /**
  * The repository for managing the actual shopping list.
@@ -33,10 +34,11 @@ public interface EntryRepository {
 	 * Retrieves all shopping list entries for a specific user.
 	 *
 	 * @param userID the ID of the user
-	 * @return a {@link List} of {@link Entry} objects belonging to the user
+	 * @return a {@link List} of {@link ShoppingListItem} objects belonging to the
+	 *         user
 	 * @throws DataAccessException if a database error occurs while retrieving data
 	 */
-	List<Entry> getEntries(int userID) throws DataAccessException;
+	List<ShoppingListItem> getEntries(int userID) throws DataAccessException;
 
 	/**
 	 * Calculates the total cost of all items in the user's list.

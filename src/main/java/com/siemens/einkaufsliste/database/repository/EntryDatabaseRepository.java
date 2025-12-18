@@ -15,6 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.siemens.einkaufsliste.database.model.Entry;
+import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.model.ShoppingListItem;
 
 public final class EntryDatabaseRepository implements EntryRepository {
 
@@ -59,28 +61,46 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	}
 
 	@Override
-	public List<Entry> getEntries(int userID) throws DataAccessException {
-		List<Entry> entries = new ArrayList<>();
+	public List<ShoppingListItem> getEntries(int userID) throws DataAccessException {
+		List<ShoppingListItem> items = new ArrayList<>();
+
 		final String sql = """
-				SELECT entryID, userID, entry.productID, quantity, checkDate
-				FROM entry, product
-				WHERE entry.productID = product.productID
-				AND userID = ?
-				ORDER BY checkDate IS NOT NULL, product.name ASC, checkDate ASC
+				SELECT
+				    entry.entryID, entry.userID, entry.productID, entry.quantity, entry.checkDate,
+				    product.name, product.category, product.brand, product.price
+				FROM entry
+				JOIN product ON entry.productID = product.productID
+				WHERE entry.userID = ?
+				ORDER BY entry.checkDate IS NOT NULL, product.name ASC, entry.checkDate ASC
 				""";
+
 		try (Connection connection = Database.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setInt(1, userID);
 			try (ResultSet resultSet = statement.executeQuery()) {
 				while (resultSet.next()) {
-					entries.add(mapToEntry(resultSet));
+					LocalDate checkDate = null;
+					Date sqlDate = resultSet.getDate("checkDate");
+					if (sqlDate != null) {
+						checkDate = sqlDate.toLocalDate();
+					}
+
+					Entry entry = new Entry(resultSet.getInt("entryID"), resultSet.getInt("userID"),
+							resultSet.getInt("productID"), resultSet.getInt("quantity"), checkDate);
+
+					Product product = new Product(resultSet.getInt("productID"), resultSet.getString("name"),
+							Product.Category.valueOf(resultSet.getString("category")), resultSet.getString("brand"),
+							resultSet.getInt("price"));
+
+					items.add(new ShoppingListItem(entry, product));
 				}
 			}
 		} catch (SQLException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			throw new DataAccessException(e);
 		}
-		return Collections.unmodifiableList(entries);
+
+		return Collections.unmodifiableList(items);
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.Product.Category;
+import com.siemens.einkaufsliste.database.model.ShoppingListItem;
 import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.model.User.Gender;
 import com.siemens.einkaufsliste.database.repository.DataAccessException;
@@ -196,11 +197,13 @@ public final class EntryDatabaseRepositoryTest {
 		}
 
 		for (int i = 0; i < testUsers.size(); i++) {
-			List<Entry> entries = entryRepository.getEntries(testUsers.get(i).userID());
+			List<ShoppingListItem> items = entryRepository.getEntries(testUsers.get(i).userID());
+
 			int expectedEntryId = createdEntries.get(i).entryID();
 			boolean found = false;
-			for (Entry e : entries) {
-				if (e.entryID() == expectedEntryId) {
+
+			for (ShoppingListItem item : items) {
+				if (item.entry().entryID() == expectedEntryId) {
 					found = true;
 					break;
 				}
