@@ -5,3 +5,7 @@ Fix: Wir ersetzen die Single-Connection durch ein Connection Pool und räumen di
 Gleichzeitig optimieren wir die SQL-Anfragen, und beheben auch andere strukturelle, von der Datenbank abhängige Probleme, machen den Code eleganter und vereinfachen/entfernen einige Funktionen.
 
 Hat bereits dramatisch Performance verbessert (Alle Tests laufen nun nur noch in 10 Sekunden ab, statt in Minuten wie vorhin).
+
+Ein Haufen SQL-Befehle wurden optimiert, verändert und instabile SQL Methoden durch stabilere ersetzt.
+Die Tests wurden angepasst und die Soundex-Implementierung sicher gemacht.
+Allgemein mehrere Verbesserungen in den SQL-basierten Methoden.
