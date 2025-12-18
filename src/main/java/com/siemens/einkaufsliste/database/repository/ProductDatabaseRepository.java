@@ -8,18 +8,21 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.Product.Category;
 
-// TODO: Ganze klasse aufräumen, irgendwie crazy gelöst
 public final class ProductDatabaseRepository implements ProductRepository {
 
-	ProductDatabaseRepository() {
+	private static final Logger LOGGER = Logger.getLogger(ProductDatabaseRepository.class.getName());
+
+	ProductDatabaseRepository() throws DataAccessException {
 		createIfNonExistent();
 	}
 
-	private void createIfNonExistent() {
+	private void createIfNonExistent() throws DataAccessException {
 		final String sql = """
 				CREATE TABLE IF NOT EXISTS product (
 				    productID INT AUTO_INCREMENT PRIMARY KEY,
@@ -32,12 +35,13 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		try (Connection connection = Database.getConnection(); Statement statement = connection.createStatement()) {
 			statement.execute(sql);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public List<String> brands() {
+	public List<String> brands() throws DataAccessException {
 		List<String> list = new ArrayList<>();
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection
@@ -47,27 +51,26 @@ public final class ProductDatabaseRepository implements ProductRepository {
 				list.add(resultSet.getString("brand"));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return list;
 	}
 
 	@Override
-	public List<Product> findProducts(Product.Category searchCategory) {
+	public List<Product> findProducts(Product.Category searchCategory) throws DataAccessException {
 		return searchProducts("", -1, -1, new Category[] { searchCategory }, null);
 	}
 
 	@Override
-	public List<Product> searchProducts(String searchName) {
+	public List<Product> searchProducts(String searchName) throws DataAccessException {
 		return searchProducts(searchName, -1, -1, null, null);
 	}
 
+	// TODO: FIX THIS DUMPSTERFIRE OF A METHOD WHAT???? XDDD
 	@Override
 	public List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categorys,
-			String[] brands) {
-		// TODO: ??????
-		// TODO: WAS Ist das für ne implementation hahahhahahahha
-		// TODO: XDDDDD
+			String[] brands) throws DataAccessException {
 
 		StringBuilder stringBuilder = new StringBuilder("SELECT * FROM product");
 
@@ -139,18 +142,19 @@ public final class ProductDatabaseRepository implements ProductRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return list;
 	}
 
 	@Override
-	public List<Product> getProducts() {
+	public List<Product> getProducts() throws DataAccessException {
 		return searchProducts("", -1, -1, null, null);
 	}
 
 	@Override
-	public Optional<Product> getProduct(int productID) {
+	public Optional<Product> getProduct(int productID) throws DataAccessException {
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection
 						.prepareStatement("SELECT * FROM product WHERE productID = ?")) {
@@ -161,12 +165,13 @@ public final class ProductDatabaseRepository implements ProductRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return Optional.empty();
 	}
 
-	private boolean existsByNameAndBrand(String name, String brand) {
+	private boolean existsByNameAndBrand(String name, String brand) throws DataAccessException {
 		final String sql = "SELECT COUNT(*) FROM product WHERE name = ? AND brand = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -178,15 +183,16 @@ public final class ProductDatabaseRepository implements ProductRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return false;
 	}
 
 	@Override
-	public Product addProduct(Product product) throws IllegalArgumentException {
+	public Product addProduct(Product product) throws IllegalArgumentException, DataAccessException {
 		if (existsByNameAndBrand(product.name(), product.brand())) {
-			throw new IllegalArgumentException("Das Produkt existiert bereits!");
+			throw new IllegalArgumentException();
 		}
 
 		try (Connection connection = Database.getConnection();
@@ -213,20 +219,21 @@ public final class ProductDatabaseRepository implements ProductRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		return null;
 	}
 
 	@Override
-	public void removeProduct(int productID) {
+	public void removeProduct(int productID) throws DataAccessException {
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection
 						.prepareStatement("DELETE FROM product WHERE productID = ?")) {
 			preparedStatement.setInt(1, productID);
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 

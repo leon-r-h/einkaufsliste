@@ -7,17 +7,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.model.User.Gender;
 
 public final class UserDatabaseRepository implements UserRepository {
 
-	UserDatabaseRepository() {
+	private static final Logger LOGGER = Logger.getLogger(UserDatabaseRepository.class.getName());
+
+	UserDatabaseRepository() throws DataAccessException {
 		createIfNonExistent();
 	}
 
-	private void createIfNonExistent() {
+	private void createIfNonExistent() throws DataAccessException {
 		final String sql = """
 				CREATE TABLE IF NOT EXISTS user (
 				    userID INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,12 +37,13 @@ public final class UserDatabaseRepository implements UserRepository {
 		try (Connection connection = Database.getConnection(); Statement statement = connection.createStatement()) {
 			statement.execute(sql);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public Optional<User> getUser(int userID) {
+	public Optional<User> getUser(int userID) throws DataAccessException {
 		final String sql = "SELECT * FROM user WHERE userId= ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -49,13 +54,14 @@ public final class UserDatabaseRepository implements UserRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return Optional.empty();
 	}
 
 	@Override
-	public Optional<User> getUser(String email) {
+	public Optional<User> getUser(String email) throws DataAccessException {
 		final String sql = "SELECT * FROM user WHERE email = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -66,13 +72,14 @@ public final class UserDatabaseRepository implements UserRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return Optional.empty();
 	}
 
 	@Override
-	public boolean existsByEmail(String email) {
+	public boolean existsByEmail(String email) throws DataAccessException {
 		final String sql = "SELECT 1 FROM user WHERE email = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -81,13 +88,13 @@ public final class UserDatabaseRepository implements UserRepository {
 				return resultSet.next();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		return false;
 	}
 
 	@Override
-	public User registerUser(User user) throws IllegalArgumentException {
+	public User registerUser(User user) throws IllegalArgumentException, DataAccessException {
 		if (user.email().isBlank() || user.firstName().isBlank() || user.lastName().isBlank()
 				|| user.password().isBlank() || user.password().length() < 4) {
 			throw new IllegalArgumentException();
@@ -126,26 +133,26 @@ public final class UserDatabaseRepository implements UserRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new IllegalArgumentException();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public boolean deleteUser(int userID) {
+	public boolean deleteUser(int userID) throws DataAccessException {
 		final String sql = "DELETE FROM user WHERE userID = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setInt(1, userID);
 			return preparedStatement.executeUpdate() > 0;
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		return false;
 	}
 
 	@Override
-	public void updateUser(User user) {
+	public void updateUser(User user) throws DataAccessException {
 		final String sql = "UPDATE user SET firstName=?, lastName=?, birthDate=?, gender=?, email=?, password=?, newsletter=? WHERE userID=?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -162,7 +169,8 @@ public final class UserDatabaseRepository implements UserRepository {
 				throw new IllegalArgumentException();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 

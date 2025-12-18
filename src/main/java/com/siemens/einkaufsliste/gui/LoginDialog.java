@@ -5,6 +5,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -18,11 +19,14 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import com.siemens.einkaufsliste.database.model.User;
+import com.siemens.einkaufsliste.database.repository.DataAccessException;
 import com.siemens.einkaufsliste.database.repository.Database;
 
 public final class LoginDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
+	
+	private static final Logger LOGGER = Logger.getLogger(LoginDialog.class.getName());
 
 	private JTextField emailField;
 	private JPasswordField passwordField;
@@ -111,14 +115,18 @@ public final class LoginDialog extends JDialog {
 			return;
 		}
 
-		Optional<User> userOpt = Database.getUsers().getUser(email);
+		try {
+			Optional<User> userOpt = Database.getUsers().getUser(email);
 
-		if (userOpt.isPresent() && userOpt.get().password().equals(password)) {
-			authenticatedUser = userOpt.get();
-			dispose();
-		} else {
-			JOptionPane.showMessageDialog(this, "Invalid credentials", "Error", JOptionPane.ERROR_MESSAGE);
-			passwordField.setText("");
+			if (userOpt.isPresent() && userOpt.get().password().equals(password)) {
+				authenticatedUser = userOpt.get();
+				dispose();
+			} else {
+				JOptionPane.showMessageDialog(this, "Invalid credentials", "Error", JOptionPane.ERROR_MESSAGE);
+				passwordField.setText("");
+			}
+		} catch (DataAccessException e) {
+			ErrorHandler.handle(null, e, LOGGER);
 		}
 	}
 

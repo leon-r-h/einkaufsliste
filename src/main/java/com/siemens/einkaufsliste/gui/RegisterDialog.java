@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -22,7 +23,6 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.model.User.Gender;
 import com.siemens.einkaufsliste.database.repository.Database;
@@ -30,7 +30,9 @@ import com.siemens.einkaufsliste.database.repository.Database;
 public final class RegisterDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-
+	
+	private static final Logger LOGGER = Logger.getLogger(RegisterDialog.class.getName());
+	
 	private JTextField firstNameField;
 	private JTextField lastNameField;
 	private JTextField emailField;
@@ -130,7 +132,7 @@ public final class RegisterDialog extends JDialog {
 		newsletterBox = new JCheckBox("Subscribe to Newsletter");
 		content.add(newsletterBox, gbc);
 
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.addActionListener(e -> dispose());
 
@@ -139,17 +141,12 @@ public final class RegisterDialog extends JDialog {
 		registerButton.addActionListener(e -> attemptRegistration());
 
 		buttonPanel.add(cancelButton);
-		buttonPanel.add(new JPanel() {
-			{
-				setPreferredSize(new java.awt.Dimension(5, 0));
-			}
-		});
 		buttonPanel.add(registerButton);
 
 		gbc.gridx = 0;
 		gbc.gridy++;
 		gbc.gridwidth = 2;
-		gbc.insets = new Insets(15, 4, 4, 4);
+		gbc.insets = new Insets(15, 4, 4, 0);
 		content.add(buttonPanel, gbc);
 
 		this.getRootPane().setDefaultButton(registerButton);
@@ -187,9 +184,8 @@ public final class RegisterDialog extends JDialog {
 					JOptionPane.ERROR_MESSAGE);
 		} catch (IllegalArgumentException e) {
 			JOptionPane.showMessageDialog(this, "Email already registered.", "Error", JOptionPane.ERROR_MESSAGE);
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, "Registration failed: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
+		} catch(Exception e) {
+			ErrorHandler.handle(this, e, LOGGER);
 		}
 	}
 
@@ -197,13 +193,5 @@ public final class RegisterDialog extends JDialog {
 		RegisterDialog dialog = new RegisterDialog(owner);
 		dialog.setVisible(true);
 		return Optional.ofNullable(dialog.registeredUser);
-	}
-
-	public static void main(String[] args) {
-		FlatLightLaf.setup();
-
-		Database.connect();
-
-		System.out.println(RegisterDialog.showRegisterDialog(null));
 	}
 }

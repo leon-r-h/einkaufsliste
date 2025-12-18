@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,8 +26,8 @@ public class DatabaseTest {
 	}
 
 	@Test
-	@DisplayName("Should establish a valid connection")
-	void shouldConnectSuccessfully() throws SQLException {
+	@DisplayName("Should establish a valid connection successfully")
+	void shouldConnectSuccessfully() throws Exception {
 		Database.connect();
 
 		try (Connection connection = Database.getConnection()) {
@@ -39,28 +38,29 @@ public class DatabaseTest {
 	}
 
 	@Test
-	@DisplayName("Calling connect() twice should be safe (Idempotent)")
-	void multipleConnectCallsShouldNotThrow() {
+	@DisplayName("Connecting twice should throw IllegalStateException")
+	void multipleConnectCallsShouldThrow() throws Exception {
 		Database.connect();
 		assertThrows(IllegalStateException.class, Database::connect);
 	}
 
 	@Test
 	@DisplayName("Repositories should be accessible only after connection")
-	void repositoriesShouldBeInitialized() {
+	void repositoriesShouldBeInitialized() throws Exception {
 		assertThrows(IllegalStateException.class, Database::getUsers);
 		assertThrows(IllegalStateException.class, Database::getProducts);
 		assertThrows(IllegalStateException.class, Database::getEntries);
 
 		Database.connect();
+
 		assertNotNull(Database.getUsers());
 		assertNotNull(Database.getProducts());
 		assertNotNull(Database.getEntries());
 	}
 
 	@Test
-	@DisplayName("Disconnect should reset state and Repositories")
-	void disconnectShouldResetRepositories() {
+	@DisplayName("Disconnect should reset state and make repositories inaccessible")
+	void disconnectShouldResetRepositories() throws Exception {
 		Database.connect();
 		assertNotNull(Database.getUsers());
 

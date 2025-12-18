@@ -66,11 +66,12 @@ public final class Database {
 
 	/**
 	 * Connects to the database.
+	 * @throws DataAccessException
 	 *
 	 * @throws IllegalStateException If a connection is already established
 	 * @throws RuntimeException      If another error occurs.
 	 */
-	public static void connect() {
+	public static void connect() throws DataAccessException {
 		if (dataSource != null && !dataSource.isClosed()) {
 			throw new IllegalStateException();
 		}

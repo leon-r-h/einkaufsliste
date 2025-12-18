@@ -5,18 +5,23 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
 
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.repository.DataAccessException;
 import com.siemens.einkaufsliste.database.repository.EntryRepository;
 import com.siemens.einkaufsliste.database.repository.ProductRepository;
 
 public final class EntryTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
+
+	private static final Logger LOGGER = Logger.getLogger(EntryTableModel.class.getName());
 
 	private static final String[] COLUMN_NAMES = { "Checked", "Quantity", "Product" };
 
@@ -41,9 +46,10 @@ public final class EntryTableModel extends AbstractTableModel {
 
 		new SwingWorker<AddResult, Void>() {
 			@Override
-			protected AddResult doInBackground() {
+			protected AddResult doInBackground() throws Exception {
 				Entry saved = entryRepository.addEntry(entry);
 				String name = fetchProductName(saved.productID());
+
 				return new AddResult(saved, name);
 			}
 
@@ -54,9 +60,8 @@ public final class EntryTableModel extends AbstractTableModel {
 					entries.add(result.entry());
 					productCache.put(result.entry().productID(), result.name());
 					refreshTable();
-				} catch (Exception e) {
-					e.printStackTrace();
-					reloadData();
+				} catch (InterruptedException | ExecutionException e) {
+					ErrorHandler.handle(null, e, LOGGER);
 				}
 			}
 		}.execute();
@@ -71,7 +76,7 @@ public final class EntryTableModel extends AbstractTableModel {
 
 		new SwingWorker<Void, Void>() {
 			@Override
-			protected Void doInBackground() {
+			protected Void doInBackground() throws Exception {
 				entryRepository.removeEntry(target.entryID());
 				return null;
 			}
@@ -80,16 +85,15 @@ public final class EntryTableModel extends AbstractTableModel {
 			protected void done() {
 				try {
 					get();
-					// Double check index validity after async op
+
 					if (rowIndex < entries.size() && entries.get(rowIndex).entryID() == target.entryID()) {
 						entries.remove(rowIndex);
 						fireTableRowsDeleted(rowIndex, rowIndex);
 					} else {
 						reloadData();
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					reloadData();
+				} catch (InterruptedException | ExecutionException e) {
+					ErrorHandler.handle(null, e, LOGGER);
 				}
 			}
 		}.execute();
@@ -107,7 +111,7 @@ public final class EntryTableModel extends AbstractTableModel {
 
 		new SwingWorker<ReloadResult, Void>() {
 			@Override
-			protected ReloadResult doInBackground() {
+			protected ReloadResult doInBackground() throws Exception {
 				List<Entry> freshEntries = new ArrayList<>(entryRepository.getEntries(userID));
 				Map<Integer, String> freshCache = new HashMap<>();
 
@@ -127,8 +131,8 @@ public final class EntryTableModel extends AbstractTableModel {
 					productCache.clear();
 					productCache.putAll(result.names());
 					refreshTable();
-				} catch (Exception e) {
-					e.printStackTrace();
+				} catch (InterruptedException | ExecutionException e) {
+					ErrorHandler.handle(null, e, LOGGER);
 				}
 			}
 		}.execute();
@@ -188,13 +192,14 @@ public final class EntryTableModel extends AbstractTableModel {
 
 		new SwingWorker<Entry, Void>() {
 			@Override
-			protected Entry doInBackground() {
+			protected Entry doInBackground() throws Exception {
 				if (columnIndex == 0) {
 					return ((Boolean) aValue) ? entryRepository.checkEntry(current.entryID())
 							: entryRepository.uncheckEntry(current.entryID());
 				} else if (columnIndex == 1) {
 					return entryRepository.updateQuantity(current.entryID(), (Integer) aValue);
 				}
+
 				return null;
 			}
 
@@ -206,9 +211,8 @@ public final class EntryTableModel extends AbstractTableModel {
 						entries.set(rowIndex, updated);
 						refreshTable();
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					reloadData();
+				} catch (InterruptedException | ExecutionException e) {
+					ErrorHandler.handle(null, e, LOGGER);
 				}
 			}
 		}.execute();
@@ -221,7 +225,7 @@ public final class EntryTableModel extends AbstractTableModel {
 		fireTableDataChanged();
 	}
 
-	private String fetchProductName(int productID) {
+	private String fetchProductName(int productID) throws DataAccessException {
 		return productRepository.getProduct(productID).map(Product::name).orElse("");
 	}
 

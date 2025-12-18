@@ -11,16 +11,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.siemens.einkaufsliste.database.model.Entry;
 
 public final class EntryDatabaseRepository implements EntryRepository {
 
-	EntryDatabaseRepository() {
+	private static final Logger LOGGER = Logger.getLogger(EntryDatabaseRepository.class.getName());
+
+	EntryDatabaseRepository() throws DataAccessException {
 		createIfNonExistent();
 	}
 
-	private void createIfNonExistent() {
+	private void createIfNonExistent() throws DataAccessException {
 		final String sql = """
 				 CREATE TABLE IF NOT EXISTS entry (
 				     entryID INT AUTO_INCREMENT PRIMARY KEY,
@@ -36,24 +40,26 @@ public final class EntryDatabaseRepository implements EntryRepository {
 		try (Connection connection = Database.getConnection(); Statement statement = connection.createStatement()) {
 			statement.execute(sql);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public void nukeEntries(int userID) {
+	public void nukeEntries(int userID) throws DataAccessException {
 		final String sql = "DELETE FROM entry WHERE userID = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setInt(1, userID);
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public List<Entry> getEntries(int userID) {
+	public List<Entry> getEntries(int userID) throws DataAccessException {
 		List<Entry> entries = new ArrayList<>();
 		final String sql = """
 				SELECT entryID, userID, entry.productID, quantity, checkDate
@@ -71,13 +77,14 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return Collections.unmodifiableList(entries);
 	}
 
 	@Override
-	public int totalPrice(int userID) {
+	public int totalPrice(int userID) throws DataAccessException {
 		final String sql = """
 				SELECT SUM(price)
 				FROM product, entry, user
@@ -94,13 +101,14 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return 0;
 	}
 
 	@Override
-	public Optional<Entry> getEntry(int entryID) {
+	public Optional<Entry> getEntry(int entryID) throws DataAccessException {
 		final String sql = "SELECT * FROM entry WHERE entryID= ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -111,13 +119,14 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return Optional.empty();
 	}
 
 	@Override
-	public Entry checkEntry(int entryID) {
+	public Entry checkEntry(int entryID) throws DataAccessException {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -125,15 +134,15 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			statement.setInt(2, entryID);
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new IllegalArgumentException();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 
 		return getEntry(entryID).orElseThrow(IllegalArgumentException::new);
 	}
 
 	@Override
-	public Entry uncheckEntry(int entryID) {
+	public Entry uncheckEntry(int entryID) throws DataAccessException {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -141,14 +150,14 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			statement.setInt(2, entryID);
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new IllegalArgumentException();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		return getEntry(entryID).orElseThrow(IllegalArgumentException::new);
+		return getEntry(entryID).orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
 	}
 
 	@Override
-	public Entry updateQuantity(int entryID, int quantity) {
+	public Entry updateQuantity(int entryID, int quantity) throws DataAccessException {
 		if (quantity < 1) {
 			throw new IllegalArgumentException();
 		}
@@ -160,15 +169,15 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			statement.setInt(2, entryID);
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new IllegalArgumentException();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 
-		return getEntry(entryID).orElseThrow(IllegalArgumentException::new);
+		return getEntry(entryID).orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
 	}
 
 	@Override
-	public Entry addEntry(Entry entry) {
+	public Entry addEntry(Entry entry) throws DataAccessException {
 		if (entry.quantity() < 1) {
 			throw new IllegalArgumentException();
 		}
@@ -201,20 +210,21 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new IllegalArgumentException();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public void removeEntry(int entryID) {
+	public void removeEntry(int entryID) throws DataAccessException {
 		final String sql = "DELETE FROM entry WHERE entryID = ?";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setInt(1, entryID);
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 

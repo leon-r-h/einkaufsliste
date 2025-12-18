@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
@@ -14,6 +15,8 @@ import com.siemens.einkaufsliste.database.repository.ProductRepository;
 public final class ProductTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
+	
+	private static final Logger LOGGER = Logger.getLogger(ProductTableModel.class.getName());
 
 	private static final String[] COLUMN_NAMES = { "Name", "Category", "Brand", "Price" };
 
@@ -59,9 +62,8 @@ public final class ProductTableModel extends AbstractTableModel {
 				try {
 					products = get();
 					fireTableDataChanged();
-				} catch (InterruptedException | CancellationException e) {
-				} catch (ExecutionException e) {
-					e.printStackTrace();
+				} catch (InterruptedException | CancellationException | ExecutionException e) {
+					ErrorHandler.handle(null, e, LOGGER);
 				}
 			}
 		};

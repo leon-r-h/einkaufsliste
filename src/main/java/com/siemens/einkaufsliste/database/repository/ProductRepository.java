@@ -7,43 +7,21 @@ import com.siemens.einkaufsliste.database.model.Product;
 
 public interface ProductRepository {
 
-	/**
-	 * Retrieves all products.
-	 *
-	 * @return A list of all products in the database.
-	 */
-	List<Product> getProducts();
+	List<Product> getProducts() throws DataAccessException;
 
-	List<Product> findProducts(Product.Category searchCategory);
+	List<Product> findProducts(Product.Category searchCategory) throws DataAccessException;
 
-	List<Product> searchProducts(String searchName);
+	List<Product> searchProducts(String searchName) throws DataAccessException;
 
 	List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categories,
-			String[] brand);
+			String[] brand) throws DataAccessException;
 
-	List<String> brands();
+	List<String> brands() throws DataAccessException;
 
-	/**
-	 * Searches for a product by ID.
-	 *
-	 * @param productID The ID of the product
-	 * @return An {@link Optional} containing the {@link Product}, or {@code Empty}
-	 *         if not found.
-	 */
-	Optional<Product> getProduct(int productID);
+	Optional<Product> getProduct(int productID) throws DataAccessException;
 
-	/**
-	 * Adds a new product.
-	 *
-	 * @param product The product to add
-	 */
-	public Product addProduct(Product product);
+	public Product addProduct(Product product) throws DataAccessException;
 
-	/**
-	 * Removes a product by ID.
-	 *
-	 * @param productID The ID of the product to remove
-	 */
-	public void removeProduct(int productID);
+	public void removeProduct(int productID) throws DataAccessException;
 
 }

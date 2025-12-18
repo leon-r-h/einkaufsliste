@@ -18,10 +18,10 @@ import java.util.stream.Stream;
  * Usage: java Main -> scans current working directory java Main
  * /path/to/project/root -> scans provided folder
  */
-public class SrcTestExporer {
+public class SrcTestExporter {
 
 	public static void main(String[] args) {
-		Path root = (args != null && args.length > 0) ? Paths.get(args[0]) : Paths.get("./src/main/java/");
+		Path root = (args != null && args.length > 0) ? Paths.get(args[0]) : Paths.get("./src/main/java/com/siemens/einkaufsliste/gui");
 		if (!Files.exists(root)) {
 			System.err.println("Path does not exist: " + root.toAbsolutePath());
 			System.exit(2);

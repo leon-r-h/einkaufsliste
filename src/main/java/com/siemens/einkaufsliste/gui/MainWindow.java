@@ -6,6 +6,8 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.KeyEvent;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -34,9 +36,12 @@ import com.formdev.flatlaf.icons.FlatSearchIcon;
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.User;
+import com.siemens.einkaufsliste.database.repository.DataAccessException;
 import com.siemens.einkaufsliste.database.repository.Database;
 
 public final class MainWindow implements UserContext {
+
+	private static final Logger LOGGER = Logger.getLogger(MainWindow.class.getName());
 
 	public static void main(String[] args) {
 		new MainWindow();
@@ -50,7 +55,14 @@ public final class MainWindow implements UserContext {
 	}
 
 	private void initializeLogic() {
-		Database.connect();
+		// Set sensible logging format
+		System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] %4$s: %5$s%6$s%n");
+
+		try {
+			Database.connect();
+		} catch (DataAccessException e) {
+			ErrorHandler.handle(null, e, LOGGER);
+		}
 	}
 
 	@Override
@@ -146,6 +158,8 @@ public final class MainWindow implements UserContext {
 		productTable.setDragEnabled(true);
 
 		productTable.setTransferHandler(new TransferHandler() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int getSourceActions(JComponent component) {
 				return COPY;
@@ -198,6 +212,8 @@ public final class MainWindow implements UserContext {
 		shoppingListTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		shoppingListTable.setTransferHandler(new TransferHandler() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public boolean canImport(TransferSupport support) {
 				return currentUser.isPresent() && support.isDataFlavorSupported(ProductTransferable.PRODUCT_FLAVOR);
@@ -214,7 +230,8 @@ public final class MainWindow implements UserContext {
 					addProductToEntries(product);
 					return true;
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.log(Level.WARNING, "Drag and drop failed", e);
+
 					return false;
 				}
 			}

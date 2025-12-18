@@ -22,48 +22,7 @@ import com.siemens.einkaufsliste.database.model.User;
 
 public final class EntryUtil {
 
-	private EntryUtil() {
-	}
-
-	/* Testing Main Method */
-
-	public static void main(String[] args) {
-
-		Database.connect();
-
-		int userID = 1;
-		EntryRepository entryRepository = Database.getEntries();
-
-		entryRepository.nukeEntries(1);
-		entryRepository.nukeEntries(3);
-
-		Entry e1 = entryRepository.addEntry(new Entry(-1, 1, 100, 1, null));
-		Entry e2 = entryRepository.addEntry(new Entry(-1, 3, 101, 2, null));
-		Entry e3 = entryRepository.addEntry(new Entry(-1, 1, 102, 10, null));
-		Entry e4 = entryRepository.addEntry(new Entry(-1, 1, 104, 2, null));
-
-		entryRepository.checkEntry(e3.entryID());
-		entryRepository.checkEntry(e4.entryID());
-
-		try {
-			exportEntriesAsCsv(1);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			exportEntriesAsPdf(userID);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		entryRepository.nukeEntries(1);
-		entryRepository.nukeEntries(3);
-
-		Database.disconnect();
-	}
-
-	public static void exportEntriesAsCsv(int userID) throws IOException {
+	public static void exportEntriesAsCsv(int userID) throws IOException, DataAccessException {
 		EntryRepository entryRepository = Database.getEntries();
 		List<Entry> entries = entryRepository.getEntries(userID);
 		File folder = new File("entry_exports/" + userID + "/csv");
@@ -93,9 +52,10 @@ public final class EntryUtil {
 	 * @param userID The ID of the user whose entries are to be loaded
 	 * @return List of Entries loaded from the given file
 	 * @throws IOException
+	 * @throws DataAccessException
 	 */
 
-	public static void exportEntriesAsPdf(int userID) throws IOException {
+	public static void exportEntriesAsPdf(int userID) throws IOException, DataAccessException {
 		EntryRepository entryRepository = Database.getEntries();
 		ProductRepository productRepository = Database.getProducts();
 		UserRepository userRepository = Database.getUsers();
