@@ -16,12 +16,12 @@ public final class EntryUtil {
     private EntryUtil() {}
 
     /* Testing Main Method */
-    /*
+    
     public static void main(String[] args) {
 
         
         Database.connect();
-        File file = new File("C:\\Users\\z0052etv\\OneDrive - Siemens AG\\Desktop\\meinedatei.csv");
+        File file = new File ("../../../../../../../test/java/com/siemens/einkaufsliste/exports/testfile.csv");
         EntryRepository entryRepository = Database.getEntries();
         Entry e1 = entryRepository.addEntry(new Entry(-1, 1, 100, 1, null));
         Entry e2 = entryRepository.addEntry(new Entry(-1, 3, 101, 2, null));
@@ -36,7 +36,7 @@ public final class EntryUtil {
         catch (IOException e) {e.printStackTrace();}
         Database.disconnect();
     }
-    */
+    
     
     public static void saveEntriesToFile(int userID, File file) throws IOException {
         EntryRepository entryRepository = Database.getEntries();
