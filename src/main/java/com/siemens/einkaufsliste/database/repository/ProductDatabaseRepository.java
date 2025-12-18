@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,12 +44,15 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	@Override
 	public List<String> brands() throws DataAccessException {
 		List<String> list = new ArrayList<>();
+		final String sql = "SELECT DISTINCT brand FROM product ORDER BY brand ASC";
 		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection
-						.prepareStatement("SELECT DISTINCT product.brand FROM product");
+				PreparedStatement preparedStatement = connection.prepareStatement(sql);
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 			while (resultSet.next()) {
-				list.add(resultSet.getString("brand"));
+				String brand = resultSet.getString("brand");
+				if (brand != null && !brand.isBlank()) {
+					list.add(brand);
+				}
 			}
 		} catch (SQLException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -58,8 +62,8 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	}
 
 	@Override
-	public List<Product> findProducts(Product.Category searchCategory) throws DataAccessException {
-		return searchProducts("", -1, -1, new Category[] { searchCategory }, null);
+	public List<Product> findProducts(Category searchCategory) throws DataAccessException {
+		return searchProducts(null, -1, -1, new Category[] { searchCategory }, null);
 	}
 
 	@Override
@@ -67,76 +71,54 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		return searchProducts(searchName, -1, -1, null, null);
 	}
 
-	// TODO: FIX THIS DUMPSTERFIRE OF A METHOD WHAT???? XDDD
 	@Override
-	public List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Product.Category[] categorys,
+	public List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Category[] categories,
 			String[] brands) throws DataAccessException {
-
-		StringBuilder stringBuilder = new StringBuilder("SELECT * FROM product");
-
-		int brandCount = (brands == null) ? 0 : brands.length;
-		int categoryCount = (categorys == null) ? 0 : categorys.length;
-
-		if (brandCount > 0 || categoryCount > 0 || maxPrice != -1 || minPrice != -1 || !searchName.equals("")) {
-			stringBuilder.append(" WHERE ");
-			if (brandCount > 0) {
-				stringBuilder.append("product.brand IN (?");
-				for (int i = 0; i < brandCount - 1; i++) {
-					stringBuilder.append(", ?");
-				}
-				stringBuilder.append(") AND ");
-			}
-			if (categoryCount > 0) {
-				stringBuilder.append("product.category IN (?");
-				for (int i = 0; i < categoryCount - 1; i++) {
-					stringBuilder.append(", ?");
-				}
-				stringBuilder.append(") AND ");
-			}
-			if (maxPrice != -1) {
-				stringBuilder.append("product.price < ? AND ");
-			}
-			if (minPrice != -1) {
-				stringBuilder.append("product.price > ? AND ");
-			}
-
-			if (!searchName.equals("")) {
-				stringBuilder.append(
-						"LOWER(name) LIKE ? OR SOUNDEX(name) LIKE CONCAT(TRIM(TRAILING '0' FROM SOUNDEX(?)), '%')");
-			} else {
-				stringBuilder.setLength(stringBuilder.length() - 5);
-			}
-		}
+		final String sql = """
+				SELECT * FROM product
+				WHERE (? IS NULL OR (LOWER(name) LIKE ? OR SOUNDEX(name) LIKE CONCAT(TRIM(TRAILING '0' FROM SOUNDEX(?)), '%')))
+				AND (? = -1 OR price <= ?)
+				AND (? = -1 OR price >= ?)
+				AND (? = -1 OR category = ?)
+				AND (? IS NULL OR brand = ?)
+				ORDER BY name ASC
+				""";
 
 		List<Product> list = new ArrayList<>();
+		String rawName = (searchName != null && !searchName.isBlank()) ? searchName : null;
+		String likeName = (rawName != null) ? "%" + rawName.toLowerCase() + "%" : null;
+		int catVal = (categories != null && categories.length > 0) ? categories[0].ordinal() : -1;
+		String brandVal = (brands != null && brands.length > 0) ? brands[0] : null;
 
 		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(stringBuilder.toString())) {
+				PreparedStatement statement = connection.prepareStatement(sql)) {
 
-			int pos = 1;
-
-			if (brandCount > 0) {
-				for (String brand : brands) {
-					preparedStatement.setString(pos++, brand);
-				}
-			}
-			if (categoryCount > 0) {
-				for (Category cat : categorys) {
-					preparedStatement.setInt(pos++, cat.ordinal());
-				}
-			}
-			if (maxPrice != -1) {
-				preparedStatement.setInt(pos++, maxPrice);
-			}
-			if (minPrice != -1) {
-				preparedStatement.setInt(pos++, minPrice);
-			}
-			if (!searchName.equals("")) {
-				preparedStatement.setString(pos++, "%" + searchName.toLowerCase() + "%");
-				preparedStatement.setString(pos++, searchName);
+			if (rawName == null) {
+				statement.setNull(1, Types.VARCHAR);
+				statement.setNull(2, Types.VARCHAR);
+				statement.setNull(3, Types.VARCHAR);
+			} else {
+				statement.setString(1, rawName);
+				statement.setString(2, likeName);
+				statement.setString(3, rawName);
 			}
 
-			try (ResultSet rs = preparedStatement.executeQuery()) {
+			statement.setInt(4, maxPrice);
+			statement.setInt(5, maxPrice);
+			statement.setInt(6, minPrice);
+			statement.setInt(7, minPrice);
+			statement.setInt(8, catVal);
+			statement.setInt(9, catVal);
+
+			if (brandVal == null) {
+				statement.setNull(10, Types.VARCHAR);
+				statement.setNull(11, Types.VARCHAR);
+			} else {
+				statement.setString(10, brandVal);
+				statement.setString(11, brandVal);
+			}
+
+			try (ResultSet rs = statement.executeQuery()) {
 				while (rs.next()) {
 					list.add(mapToProduct(rs));
 				}
@@ -150,14 +132,14 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	@Override
 	public List<Product> getProducts() throws DataAccessException {
-		return searchProducts("", -1, -1, null, null);
+		return searchProducts(null, -1, -1, null, null);
 	}
 
 	@Override
 	public Optional<Product> getProduct(int productID) throws DataAccessException {
+		final String sql = "SELECT * FROM product WHERE productID = ?";
 		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection
-						.prepareStatement("SELECT * FROM product WHERE productID = ?")) {
+				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setInt(1, productID);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
@@ -171,33 +153,34 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		return Optional.empty();
 	}
 
-	private boolean existsByNameAndBrand(String name, String brand) throws DataAccessException {
-		final String sql = "SELECT COUNT(*) FROM product WHERE name = ? AND brand = ?";
+	private Optional<Product> getExistingProduct(String name, String brand) throws DataAccessException {
+		final String sql = "SELECT * FROM product WHERE name = ? AND brand = ? LIMIT 1";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setString(1, name);
 			preparedStatement.setString(2, brand);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return resultSet.getInt(1) > 0;
+					return Optional.of(mapToProduct(resultSet));
 				}
 			}
 		} catch (SQLException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			throw new DataAccessException(e);
 		}
-		return false;
+		return Optional.empty();
 	}
 
 	@Override
 	public Product addProduct(Product product) throws IllegalArgumentException, DataAccessException {
-		if (existsByNameAndBrand(product.name(), product.brand())) {
-			throw new IllegalArgumentException();
+		Optional<Product> existing = getExistingProduct(product.name(), product.brand());
+		if (existing.isPresent()) {
+			return existing.get();
 		}
 
+		final String sql = "INSERT INTO product (name, category, brand, price) VALUES (?, ?, ?, ?)";
 		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection.prepareStatement(
-						"INSERT INTO product (name, category, brand, price) VALUES (?,?,?,?)",
+				PreparedStatement preparedStatement = connection.prepareStatement(sql,
 						Statement.RETURN_GENERATED_KEYS)) {
 
 			preparedStatement.setString(1, product.name());
@@ -205,9 +188,8 @@ public final class ProductDatabaseRepository implements ProductRepository {
 			preparedStatement.setString(3, product.brand());
 			preparedStatement.setInt(4, product.price());
 
-			int affectedRows = preparedStatement.executeUpdate();
-			if (affectedRows == 0) {
-				throw new IllegalArgumentException();
+			if (preparedStatement.executeUpdate() == 0) {
+				throw new SQLException("Creation failed, no rows affected.");
 			}
 
 			try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
@@ -215,7 +197,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 					return new Product(generatedKeys.getInt(1), product.name(), product.category(), product.brand(),
 							product.price());
 				} else {
-					throw new IllegalArgumentException();
+					throw new SQLException("Creation failed, no ID obtained.");
 				}
 			}
 		} catch (SQLException e) {
@@ -226,9 +208,9 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	@Override
 	public void removeProduct(int productID) throws DataAccessException {
+		final String sql = "DELETE FROM product WHERE productID = ?";
 		try (Connection connection = Database.getConnection();
-				PreparedStatement preparedStatement = connection
-						.prepareStatement("DELETE FROM product WHERE productID = ?")) {
+				PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setInt(1, productID);
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
@@ -237,12 +219,9 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 	}
 
-	private Product mapToProduct(ResultSet rs) throws SQLException {
-		int categoryIndex = rs.getInt("category");
-		Category category = (categoryIndex >= 0 && categoryIndex < Category.values().length)
-				? Category.values()[categoryIndex]
-				: Category.values()[0];
-		return new Product(rs.getInt("productID"), rs.getString("name"), category, rs.getString("brand"),
-				rs.getInt("price"));
+	private Product mapToProduct(ResultSet resultSet) throws SQLException {
+		return new Product(resultSet.getInt("productID"), resultSet.getString("name"),
+				Category.values()[resultSet.getInt("category")], resultSet.getString("brand"),
+				resultSet.getInt("price"));
 	}
 }

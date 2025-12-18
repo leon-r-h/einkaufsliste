@@ -23,9 +23,7 @@ public final class ErrorHandler {
 		if (throwable instanceof DataAccessException) {
 			logger.log(Level.WARNING, "Database operation failed", throwable);
 
-			JOptionPane.showMessageDialog(parentComponent,
-					"Could not communicate with the database.",
-					"Formula Emendi",
+			JOptionPane.showMessageDialog(parentComponent, "Could not communicate with the database.", "Formula Emendi",
 					JOptionPane.ERROR_MESSAGE);
 		} else if (throwable instanceof InterruptedException) {
 			logger.log(Level.INFO, "Operation interrupted");

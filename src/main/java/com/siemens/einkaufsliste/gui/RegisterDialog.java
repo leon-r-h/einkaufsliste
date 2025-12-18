@@ -30,9 +30,9 @@ import com.siemens.einkaufsliste.database.repository.Database;
 public final class RegisterDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private static final Logger LOGGER = Logger.getLogger(RegisterDialog.class.getName());
-	
+
 	private JTextField firstNameField;
 	private JTextField lastNameField;
 	private JTextField emailField;
@@ -184,7 +184,7 @@ public final class RegisterDialog extends JDialog {
 					JOptionPane.ERROR_MESSAGE);
 		} catch (IllegalArgumentException e) {
 			JOptionPane.showMessageDialog(this, "Email already registered.", "Error", JOptionPane.ERROR_MESSAGE);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			ErrorHandler.handle(this, e, LOGGER);
 		}
 	}

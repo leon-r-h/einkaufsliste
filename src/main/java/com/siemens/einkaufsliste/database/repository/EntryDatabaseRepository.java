@@ -153,7 +153,8 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			throw new DataAccessException(e);
 		}
-		return getEntry(entryID).orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
+		return getEntry(entryID)
+				.orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
 	}
 
 	@Override
@@ -173,7 +174,8 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			throw new DataAccessException(e);
 		}
 
-		return getEntry(entryID).orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
+		return getEntry(entryID)
+				.orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
 	}
 
 	@Override

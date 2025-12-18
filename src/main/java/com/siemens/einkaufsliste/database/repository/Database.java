@@ -66,6 +66,7 @@ public final class Database {
 
 	/**
 	 * Connects to the database.
+	 * 
 	 * @throws DataAccessException
 	 *
 	 * @throws IllegalStateException If a connection is already established

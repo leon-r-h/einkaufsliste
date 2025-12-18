@@ -15,7 +15,7 @@ import com.siemens.einkaufsliste.database.repository.ProductRepository;
 public final class ProductTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private static final Logger LOGGER = Logger.getLogger(ProductTableModel.class.getName());
 
 	private static final String[] COLUMN_NAMES = { "Name", "Category", "Brand", "Price" };

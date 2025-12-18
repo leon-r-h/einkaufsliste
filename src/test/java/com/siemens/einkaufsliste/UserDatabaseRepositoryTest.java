@@ -43,8 +43,8 @@ public final class UserDatabaseRepositoryTest {
 	@Order(1)
 	@DisplayName("Should successfully register a test user")
 	void registerTestUser() throws Exception {
-		testUser = new User(0, "Max", "Miller", LocalDate.of(1990, 3, 15), User.Gender.MALE,
-				"max.miller.test@email.de", "Pass123!", true);
+		testUser = new User(0, "Max", "Miller", LocalDate.of(1990, 3, 15), User.Gender.MALE, "max.miller.test@email.de",
+				"Pass123!", true);
 
 		User registeredUser = userRepository.registerUser(testUser);
 

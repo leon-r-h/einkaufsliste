@@ -30,7 +30,7 @@ import com.siemens.einkaufsliste.database.repository.UserRepository;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public final class EntryDatabaseRepositoryTest {
-	
+
 	private static EntryRepository entryRepository;
 	private static UserRepository userRepository;
 	private static ProductRepository productRepository;
@@ -89,7 +89,7 @@ public final class EntryDatabaseRepositoryTest {
 		assertTrue(testEntry.userID() == newEntry.userID());
 		assertTrue(testEntry.productID() == newEntry.productID());
 		assertTrue(testEntry.quantity() == newEntry.quantity());
-		
+
 		if (testEntry.checkDate() == null || newEntry.checkDate() == null) {
 			assertTrue(testEntry.checkDate() == null && newEntry.checkDate() == null);
 		} else {
@@ -128,13 +128,13 @@ public final class EntryDatabaseRepositoryTest {
 	@DisplayName("Should handle checking and unchecking of entries")
 	void uncheckEntry() throws Exception {
 		Entry entry = entryRepository.addEntry(new Entry(-1, testUser.userID(), testProduct.productID(), 3, null));
-		
+
 		Entry checked = entryRepository.checkEntry(entry.entryID());
 		assertTrue(checked.checkDate() != null);
-		
+
 		Entry unchecked = entryRepository.uncheckEntry(entry.entryID());
 		assertTrue(unchecked.checkDate() == null);
-		
+
 		entryRepository.removeEntry(entry.entryID());
 	}
 
@@ -170,7 +170,7 @@ public final class EntryDatabaseRepositoryTest {
 		List<User> testUsers = new ArrayList<>();
 		List<Product> testProducts = new ArrayList<>();
 		long unique = System.currentTimeMillis();
-		
+
 		testUsers.add(userRepository.registerUser(new User(-1, "Quentin", "Tarantino", LocalDate.of(1963, 3, 27),
 				Gender.MALE, "quentin.tarantino+test" + unique + "@email.com", "QT63", true)));
 		testUsers.add(userRepository.registerUser(new User(-1, "Aiko", "Tanaka", LocalDate.of(1990, 8, 15),
