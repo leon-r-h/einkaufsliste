@@ -15,7 +15,8 @@ public final class PriceCellRenderer extends DefaultTableCellRenderer {
 	private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY);
 
 	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+			int row, int column) {
 		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
 		if (value instanceof Number) {

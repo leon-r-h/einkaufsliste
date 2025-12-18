@@ -21,7 +21,7 @@ public class DatabaseTest {
 		assertThrows(IllegalStateException.class, () -> {
 			com.siemens.einkaufsliste.database.repository.Database.connect();
 		});
-		
+
 	}
 
 	@Test

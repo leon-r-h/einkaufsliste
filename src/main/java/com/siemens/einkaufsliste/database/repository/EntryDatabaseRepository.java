@@ -19,7 +19,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	EntryDatabaseRepository() {
 		createIfNonExistent();
 	}
-	
+
 	private void createIfNonExistent() {
 		final String sql = """
 				 CREATE TABLE IF NOT EXISTS entry (
@@ -49,7 +49,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				DELETE FROM entry
 				WHERE userID = ?
 				""";
-		
+
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
 			stmt.setInt(1, userID);
 
@@ -69,22 +69,22 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				AND userID = ?
 				ORDER BY checkDate IS NOT NULL, product.name ASC, checkDate ASC
 				""";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)){
-			stmt.setInt(1,userID);
-			
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
+			stmt.setInt(1, userID);
+
 			try (ResultSet rs = stmt.executeQuery()) {
-			while (rs.next()) {
-				entries.add(mapToEntry(rs));
+				while (rs.next()) {
+					entries.add(mapToEntry(rs));
+				}
 			}
-			}
-		} catch (SQLException e){
+		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return Collections.unmodifiableList(entries);
 	}
 
 	@Override
-	public int totalPrice(int userID){
+	public int totalPrice(int userID) {
 		final String sql = """
 				SELECT SUM(price)
 				FROM product, entry, user
@@ -97,8 +97,9 @@ public final class EntryDatabaseRepository implements EntryRepository {
 			stmt.setInt(1, userID);
 
 			try (ResultSet rs = stmt.executeQuery()) {
-				if (rs.next())
+				if (rs.next()) {
 					return rs.getInt(1);
+				}
 			}
 
 		} catch (SQLException e) {
@@ -118,9 +119,9 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				if (resultSet.next()) {
 					return Optional.of(mapToEntry(resultSet));
 				}
-			} 
+			}
 		} catch (SQLException e) {
-				e.printStackTrace();
+			e.printStackTrace();
 		}
 
 		return Optional.empty();
@@ -130,18 +131,18 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	public Entry checkEntry(int entryID) {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			
+
 			stmt.setDate(1, Date.valueOf(LocalDate.now()));
 			stmt.setInt(2, entryID);
-			
+
 			stmt.executeUpdate();
 
 			Optional<Entry> entryOptional = getEntry(entryID);
-			if (entryOptional.isPresent() == false) {
+			if (!entryOptional.isPresent()) {
 				throw new IllegalArgumentException();
 			}
 			return entryOptional.get();
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -152,14 +153,14 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	public Entry uncheckEntry(int entryID) {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			
+
 			stmt.setDate(1, null);
 			stmt.setInt(2, entryID);
-			
+
 			stmt.executeUpdate();
-			
+
 			Optional<Entry> entryOptional = getEntry(entryID);
-			if (entryOptional.isPresent() == false) {
+			if (!entryOptional.isPresent()) {
 				throw new IllegalArgumentException();
 			}
 			return entryOptional.get();
@@ -172,8 +173,9 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	@Override
 	public Entry updateQuantity(int entryID, int quantity) {
-		if (quantity < 1)
+		if (quantity < 1) {
 			throw new IllegalArgumentException();
+		}
 
 		final String sql = "UPDATE entry SET quantity = ? WHERE entryID = ?";
 
@@ -183,10 +185,10 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 			stmt.executeUpdate();
 			Optional<Entry> entryOptional = getEntry(entryID);
-			if (entryOptional.isPresent() == false) {
+			if (!entryOptional.isPresent()) {
 				throw new IllegalArgumentException();
 			}
-			return entryOptional.get(); 
+			return entryOptional.get();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -196,20 +198,22 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public Entry addEntry(Entry entry) {
 		// Wirf Exception, wenn die Menge ungültig ist
-		if (entry.quantity() < 1)
+		if (entry.quantity() < 1) {
 			throw new IllegalArgumentException(); // Ungültige Eingabedaten
+		}
 
 		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
-		
+
 		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 			stmt.setInt(1, entry.userID());
 			stmt.setInt(2, entry.productID());
 			stmt.setInt(3, entry.quantity());
-			if (entry.checkDate()==null)
+			if (entry.checkDate() == null) {
 				stmt.setDate(4, null);
-			else
+			} else {
 				stmt.setDate(4, Date.valueOf(entry.checkDate()));
-			
+			}
+
 			int affectedRows = stmt.executeUpdate();
 
 			if (affectedRows == 0) {
@@ -237,7 +241,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	public void removeEntry(int entryID) {
 		final String sql = "DELETE FROM entry WHERE entryID = ?";
 
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {	
+		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
 			stmt.setInt(1, entryID);
 
 			stmt.executeUpdate();
@@ -249,33 +253,22 @@ public final class EntryDatabaseRepository implements EntryRepository {
 
 	private Entry mapToEntry(ResultSet rs) throws SQLException {
 		if (rs.getDate("checkDate") == null) {
-			return new Entry(
-				rs.getInt("entryID"),
-				rs.getInt("userID"),
-				rs.getInt("productID"),
-				rs.getInt("quantity"),
-				null
-			);
+			return new Entry(rs.getInt("entryID"), rs.getInt("userID"), rs.getInt("productID"), rs.getInt("quantity"),
+					null);
+		} else {
+			return new Entry(rs.getInt("entryID"), rs.getInt("userID"), rs.getInt("productID"), rs.getInt("quantity"),
+					rs.getDate("checkDate").toLocalDate());
 		}
-		else {
-			return new Entry(
-				rs.getInt("entryID"),
-				rs.getInt("userID"),
-				rs.getInt("productID"),
-				rs.getInt("quantity"),
-				rs.getDate("checkDate").toLocalDate()
-			);
-		}
-	}
-	/** 
-	 * 
-	 * Returns a positive int if budget is not exceeded by returned value.
-	 * Returns a negative int if budget is exceeded by returned value.
-	 * 
-	 * */
-	public int budgetTotalPriceDifference(int userID, int budget) {
-		return budget-totalPrice(userID);
 	}
 
-	
+	/**
+	 *
+	 * Returns a positive int if budget is not exceeded by returned value. Returns a
+	 * negative int if budget is exceeded by returned value.
+	 *
+	 */
+	public int budgetTotalPriceDifference(int userID, int budget) {
+		return budget - totalPrice(userID);
+	}
+
 }

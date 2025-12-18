@@ -31,7 +31,7 @@ public final class ProductTransferable implements Transferable {
 
 	@Override
 	public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
-		if(isDataFlavorSupported(flavor)) {
+		if (isDataFlavorSupported(flavor)) {
 			return product;
 		} else {
 			throw new UnsupportedFlavorException(flavor);

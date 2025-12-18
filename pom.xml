@@ -20,6 +20,8 @@
       <flatlaf.version>3.7</flatlaf.version>
       <pdfbox.version>3.0.6</pdfbox.version>
       <pdfbox.graphics2d.version>3.0.5</pdfbox.graphics2d.version>
+      
+      <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
   </properties>
 
   <dependencies>

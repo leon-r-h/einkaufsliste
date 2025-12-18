@@ -1,13 +1,13 @@
 package com.siemens.einkaufsliste.database.repository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.Product.Category;
@@ -41,29 +41,29 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	/**
 	 * Gibt alle vorhandenen Brands zurueck
 	 */
-	public List<String> brands(){
-		
+	@Override
+	public List<String> brands() {
+
 		List<String> list = new ArrayList<>();
 
 		try {
 			PreparedStatement ps = Database.getConnection()
 					.prepareStatement("SELECT DISTINCT product.brand FROM product");
 			ResultSet rs = ps.executeQuery();
-		
+
 			while (rs.next()) {
 				String brand = rs.getString("brand");
 				list.add(brand);
 			}
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		return list;
 	}
-	
-	
-	//Veraltet. In später nicht mehr benötigt stds. searchProducts nutzen
+
+	// Veraltet. In später nicht mehr benötigt stds. searchProducts nutzen
 	@Override
 	public List<Product> findProducts(Product.Category searchCategory) {
 
@@ -99,7 +99,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	}
 
-	//Veraltet. In später nicht mehr benötigt stds. searchProducts nutzen
+	// Veraltet. In später nicht mehr benötigt stds. searchProducts nutzen
 	@Override
 	public List<Product> searchProducts(String searchName) {
 		String sql = """
@@ -140,7 +140,8 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 	/**
 	 * Gibt eine Liste an Products nach gegebenen Filterkriterien zurueck.
-	 * Standartwerte: (searchName: "" , maxPrice: -1, minPrice: -1, categorys: null, brands: null) => alle Products
+	 * Standartwerte: (searchName: "" , maxPrice: -1, minPrice: -1, categorys: null,
+	 * brands: null) => alle Products
 	 *
 	 */
 	@Override
@@ -201,7 +202,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 
 		List<Product> list = new ArrayList<>();
 		try {
-			//System.out.println(sb.toString());
+			// System.out.println(sb.toString());
 			PreparedStatement ps = Database.getConnection().prepareStatement(sb.toString());
 
 			int pos = 1;
@@ -255,7 +256,7 @@ public final class ProductDatabaseRepository implements ProductRepository {
 		}
 		return list;
 	}
-	
+
 	/**
 	 * Gibt eine Liste aller Products in der DB zurueck.
 	 */
@@ -263,33 +264,23 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	public List<Product> getProducts() {
 		return searchProducts("", -1, -1, null, null);
 		/*
-		List<Product> list = new ArrayList<>();
-		try {
-			PreparedStatement ps = Database.getConnection().prepareStatement("SELECT * FROM product");
-			ResultSet rs = ps.executeQuery();
-
-			while (rs.next()) {
-				int productID = rs.getInt("productID");
-				String name = rs.getString("name");
-				int categoryIndex = rs.getInt("category");
-				String brand = rs.getString("brand");
-				int price = rs.getInt("price");
-
-				Category c = Category.values()[0];
-				if (categoryIndex >= 0 && categoryIndex < Category.values().length) {
-					c = Category.values()[categoryIndex];
-				}
-
-				Product p = new Product(productID, name, c, brand, price);
-				list.add(p);
-			}
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return list;
-		*/
+		 * List<Product> list = new ArrayList<>(); try { PreparedStatement ps =
+		 * Database.getConnection().prepareStatement("SELECT * FROM product"); ResultSet
+		 * rs = ps.executeQuery();
+		 *
+		 * while (rs.next()) { int productID = rs.getInt("productID"); String name =
+		 * rs.getString("name"); int categoryIndex = rs.getInt("category"); String brand
+		 * = rs.getString("brand"); int price = rs.getInt("price");
+		 *
+		 * Category c = Category.values()[0]; if (categoryIndex >= 0 && categoryIndex <
+		 * Category.values().length) { c = Category.values()[categoryIndex]; }
+		 *
+		 * Product p = new Product(productID, name, c, brand, price); list.add(p); }
+		 *
+		 * } catch (SQLException e) { e.printStackTrace(); }
+		 *
+		 * return list;
+		 */
 	}
 
 	/**
