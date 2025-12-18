@@ -63,7 +63,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	public List<Entry> getEntries(int userID) {
 		List<Entry> entries = new ArrayList<>();
 		final String sql = """
-				SELECT entryID, userID, productID, quantity, checkDate
+				SELECT entryID, userID, entry.productID, quantity, checkDate
 				FROM entry, product
 				WHERE entry.productID = product.productID
 				AND userID = ?
