@@ -6,6 +6,17 @@ import java.sql.SQLException;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+/**
+ * The central base class for data access.
+ * <p>
+ * This singleton manages the database connection pool and acts as the "Factory"
+ * for retrieving specific repositories like {@link UserRepository} or
+ * {@link ProductRepository}. Ideally, you just call {@code connect()} once and
+ * then use what you need.
+ * </p>
+ *
+ * @author Leon Hoffmann
+ */
 public final class Database {
 
 	private Database() {
@@ -23,10 +34,11 @@ public final class Database {
 	private static EntryRepository entries;
 
 	/**
-	 * Retrieves the user repository.
+	 * Retrieves the singleton instance of the User repository.
 	 *
-	 * @return The {@link UserRepository} instance
-	 * @throws IllegalStateException If the database is not connected
+	 * @return the active {@link UserRepository} instance
+	 * @throws IllegalStateException if the {@link #connect()} method has not been
+	 *                               called yet
 	 */
 	public static UserRepository getUsers() {
 		if (users == null) {
@@ -37,10 +49,11 @@ public final class Database {
 	}
 
 	/**
-	 * Retrieves the product repository.
+	 * Retrieves the singleton instance of the Product repository.
 	 *
-	 * @return The {@link ProductRepository} instance
-	 * @throws IllegalStateException If the database is not connected
+	 * @return the active {@link ProductRepository} instance
+	 * @throws IllegalStateException if the {@link #connect()} method has not been
+	 *                               called yet
 	 */
 	public static ProductRepository getProducts() {
 		if (products == null) {
@@ -51,10 +64,11 @@ public final class Database {
 	}
 
 	/**
-	 * Retrieves the entry repository.
+	 * Retrieves the singleton instance of the Entry repository.
 	 *
-	 * @return The {@link EntryRepository} instance
-	 * @throws IllegalStateException If the database is not connected
+	 * @return the active {@link EntryRepository} instance
+	 * @throws IllegalStateException if the {@link #connect()} method has not been
+	 *                               called yet
 	 */
 	public static EntryRepository getEntries() {
 		if (entries == null) {
@@ -65,12 +79,14 @@ public final class Database {
 	}
 
 	/**
-	 * Connects to the database.
-	 * 
-	 * @throws DataAccessException
+	 * Initializes the connection pool and instantiates the repositories.
+	 * <p>
+	 * This method must be called exactly once at application startup.
+	 * </p>
 	 *
-	 * @throws IllegalStateException If a connection is already established
-	 * @throws RuntimeException      If another error occurs.
+	 * @throws DataAccessException   if the database driver cannot be loaded or
+	 *                               configuration fails
+	 * @throws IllegalStateException if a connection pool is already active
 	 */
 	public static void connect() throws DataAccessException {
 		if (dataSource != null && !dataSource.isClosed()) {
@@ -96,12 +112,16 @@ public final class Database {
 	}
 
 	/**
-	 * Returns the existing connection.
+	 * Borrows a connection from the underlying connection pool.
+	 * <p>
+	 * Callers are responsible for closing the returned connection to return it to
+	 * the pool.
+	 * </p>
 	 *
-	 * @return The active {@link Connection}
-	 * @throws SQLException
-	 * @throws IllegalStateException If no connection exists or the connection is
-	 *                               closed
+	 * @return an active {@link Connection} to the database
+	 * @throws SQLException          if a database access error occurs
+	 * @throws IllegalStateException if the database has not been initialized via
+	 *                               {@link #connect()}
 	 */
 	public static Connection getConnection() throws SQLException {
 		if (dataSource == null || dataSource.isClosed()) {
@@ -112,10 +132,13 @@ public final class Database {
 	}
 
 	/**
-	 * Closes the connection.
+	 * Closes the connection pool and releases all resources.
+	 * <p>
+	 * This should be called during application shutdown.
+	 * </p>
 	 *
-	 * @throws IllegalStateException If an error occurs while closing the
-	 *                               connection.
+	 * @throws IllegalStateException if the database is already closed or was never
+	 *                               initialized
 	 */
 	public static void disconnect() {
 		System.out.println(dataSource);

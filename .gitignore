@@ -11,3 +11,5 @@ Thumbs.db
 bin/
 einkaufsliste-cs-cleanup.xml
 einkaufsliste-cs-formatter.xml
+.vscode
+
