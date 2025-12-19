@@ -20,11 +20,10 @@ import com.siemens.einkaufsliste.database.model.User;
 
 public final class EntryUtil {
 
-
 	/**
 	 *
 	 * @param userID The ID of the user whose entries are to be loaded
-	 * @param file The target file where the CSV will be saved
+	 * @param file   The target file where the CSV will be saved
 	 * @return List of Entries loaded from the given file
 	 * @throws IOException
 	 * @throws DataAccessException
@@ -55,7 +54,7 @@ public final class EntryUtil {
 	/**
 	 *
 	 * @param userID The ID of the user whose entries are to be loaded
-	 * @param file The target file where the PDF will be saved
+	 * @param file   The target file where the PDF will be saved
 	 * @return List of Entries loaded from the given file
 	 * @throws IOException
 	 * @throws DataAccessException
@@ -179,9 +178,9 @@ public final class EntryUtil {
 			}
 
 			if (!file.exists()) {
-			file.mkdirs();
+				file.mkdirs();
 			}
-			
+
 			doc.save(file);
 		}
 	}

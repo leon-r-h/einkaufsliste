@@ -2,11 +2,11 @@ package com.siemens.einkaufsliste.gui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import javax.swing.table.AbstractTableModel;
 
 import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.repository.ProductFilter;
 import com.siemens.einkaufsliste.database.repository.ProductRepository;
 
 public final class ProductTableModel extends AbstractTableModel {
@@ -18,35 +18,26 @@ public final class ProductTableModel extends AbstractTableModel {
 	private List<Product> products;
 	private final ProductRepository productRepository;
 
-	private String currentQuery = null;
-
 	public ProductTableModel(ProductRepository productRepository) {
 		this.productRepository = productRepository;
 		this.products = new ArrayList<>();
 	}
 
-	public void search(String query) {
-		this.currentQuery = query;
-		final String querySnapshot = query;
-
+	public void search(ProductFilter filter) {
 		TaskQueue.submit(() -> {
-			if (querySnapshot == null || querySnapshot.isBlank()) {
+			if (filter == null || filter.isEmpty()) {
 				return new ArrayList<>(productRepository.getProducts());
 			} else {
-				return new ArrayList<>(productRepository.searchProducts(querySnapshot));
+				return new ArrayList<>(productRepository.searchProducts(filter));
 			}
 		}, fetched -> {
-			if (!Objects.equals(currentQuery, querySnapshot)) {
-				return;
-			}
-
 			products = fetched;
 			fireTableDataChanged();
 		});
 	}
 
 	public void reloadData() {
-		search(this.currentQuery);
+		search(new ProductFilter());
 	}
 
 	public Product getProductAt(int rowIndex) {

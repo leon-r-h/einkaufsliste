@@ -40,6 +40,7 @@ import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.repository.DataAccessException;
 import com.siemens.einkaufsliste.database.repository.Database;
+import com.siemens.einkaufsliste.database.repository.ProductFilter;
 
 public final class MainWindow implements UserContext {
 
@@ -81,9 +82,13 @@ public final class MainWindow implements UserContext {
 	private JSpinner quantitySpinner;
 	private JTable shoppingListTable;
 	private EntryTableModel shoppingListModel;
+	private FilterPopup filterPopup;
+	private ProductFilter currentFilter;
 
 	private void initializeInterface() {
 		FlatMacDarkLaf.setup();
+
+		currentFilter = new ProductFilter();
 
 		frame = new JFrame("Formula Emendi");
 		frame.addWindowListener(new WindowAdapter() {
@@ -151,7 +156,12 @@ public final class MainWindow implements UserContext {
 
 		JToggleButton filterButton = new JToggleButton(new FlatFilterIcon());
 		filterButton.setToolTipText("Filter");
-		filterButton.addActionListener(e -> refresh());
+		filterButton.addActionListener(e -> {
+			if (filterPopup != null) {
+				filterPopup.show(filterButton, 0, filterButton.getHeight());
+			}
+			filterButton.setSelected(false);
+		});
 
 		productModel = new ProductTableModel(Database.getProducts());
 
@@ -161,7 +171,11 @@ public final class MainWindow implements UserContext {
 		searchField.putClientProperty("JTextField.trailingComponent", filterButton);
 		searchField.putClientProperty("JTextField.showClearButton", true);
 		searchField.putClientProperty("JTextField.clearCallback", (Runnable) () -> searchField.setText(""));
-		searchField.getDocument().addDocumentListener(new ProductSearchListener(searchField, productModel));
+		searchField.getDocument().addDocumentListener(new ProductSearchListener(productModel, this::getCurrentFilter));
+
+		TaskQueue.submit(() -> Database.getProducts().brands(), brands -> {
+			filterPopup = new FilterPopup(brands, this::applyFilters);
+		});
 
 		productTable = new JTable(productModel);
 		productTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -207,6 +221,19 @@ public final class MainWindow implements UserContext {
 		panel.add(controlPanel, BorderLayout.PAGE_END);
 
 		return panel;
+	}
+
+	private void applyFilters() {
+		if (filterPopup != null) {
+			currentFilter = filterPopup.getFilter();
+			currentFilter.setSearchText(searchField.getText());
+			productModel.search(currentFilter);
+		}
+	}
+
+	private ProductFilter getCurrentFilter() {
+		currentFilter.setSearchText(searchField.getText());
+		return currentFilter;
 	}
 
 	private JPanel createShoppingListPanel() {

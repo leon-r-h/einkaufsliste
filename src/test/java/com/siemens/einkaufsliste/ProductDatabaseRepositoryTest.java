@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.Product.Category;
 import com.siemens.einkaufsliste.database.repository.Database;
+import com.siemens.einkaufsliste.database.repository.ProductFilter;
 import com.siemens.einkaufsliste.database.repository.ProductRepository;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -208,9 +210,8 @@ public final class ProductDatabaseRepositoryTest {
 
 	@Test
 	@Order(12)
-	@DisplayName("Should correctly find products by category")
+	@DisplayName("Should correctly find products by category using ProductFilter")
 	void findProductsByCategory() throws Exception {
-
 		Category searchCategory = Category.FRUITS;
 		Category noiseCategory = Category.ELECTRONICS;
 
@@ -226,7 +227,10 @@ public final class ProductDatabaseRepositoryTest {
 		assertNotNull(savedTarget2);
 		assertNotNull(savedNoise1);
 
-		List<Product> foundProducts = productRepository.findProducts(searchCategory);
+		ProductFilter filter = new ProductFilter();
+		filter.setCategories(EnumSet.of(searchCategory));
+
+		List<Product> foundProducts = productRepository.searchProducts(filter);
 
 		assertNotNull(foundProducts, "Result list must not be null");
 		assertFalse(foundProducts.isEmpty(), "Products should be found");
@@ -241,7 +245,6 @@ public final class ProductDatabaseRepositoryTest {
 		assertTrue(containsTarget2, "Search-Banana should be found");
 
 		boolean containsNoise = foundProducts.stream().anyMatch(p -> p.productID() == savedNoise1.productID());
-
 		assertFalse(containsNoise, "Noise-Laptop (Electronics) should NOT be found");
 
 		productRepository.removeProduct(savedTarget1.productID());
@@ -251,9 +254,8 @@ public final class ProductDatabaseRepositoryTest {
 
 	@Test
 	@Order(13)
-	@DisplayName("Should search products fuzzily and by substring")
+	@DisplayName("Should search products fuzzily with SOUNDEX and by substring")
 	void searchProducts() throws Exception {
-
 		Product targetSoundex = new Product(0, "Jägermeister 0.8L", Category.DRINKS, "Mast-Jägermeister", 1299);
 		Product targetSubstring = new Product(0, "Cloudy Apple Juice", Category.DRINKS, "BioBrand", 199);
 		Product noise = new Product(0, "Gaming Laptop", Category.ELECTRONICS, "Alienware", 200000);
@@ -262,21 +264,28 @@ public final class ProductDatabaseRepositoryTest {
 		Product savedSubstring = productRepository.addProduct(targetSubstring);
 		Product savedNoise = productRepository.addProduct(noise);
 
-		List<Product> resultFuzzy = productRepository.searchProducts("jägar");
+		ProductFilter filterFuzzy = new ProductFilter();
+		filterFuzzy.setSearchText("jägar");
+		List<Product> resultFuzzy = productRepository.searchProducts(filterFuzzy);
 
 		assertNotNull(resultFuzzy);
 		assertTrue(resultFuzzy.stream().anyMatch(p -> p.productID() == savedSoundex.productID()),
-				"Search for 'jägar' should find 'Jägermeister' (Phonetic similarity)");
+				"Search for 'jägar' should find 'Jägermeister' (SOUNDEX phonetic similarity)");
 
 		assertFalse(resultFuzzy.stream().anyMatch(p -> p.productID() == savedNoise.productID()),
 				"Search for 'jägar' should NOT find 'Gaming Laptop'");
 
-		List<Product> resultSubstring = productRepository.searchProducts("Juice");
+		ProductFilter filterSubstring = new ProductFilter();
+		filterSubstring.setSearchText("Juice");
+		List<Product> resultSubstring = productRepository.searchProducts(filterSubstring);
 
 		assertTrue(resultSubstring.stream().anyMatch(p -> p.productID() == savedSubstring.productID()),
 				"Search for 'Juice' should find 'Apple Juice' (Substring)");
 
-		List<Product> resultCaps = productRepository.searchProducts("JÄGAR");
+		ProductFilter filterCaps = new ProductFilter();
+		filterCaps.setSearchText("JÄGAR");
+		List<Product> resultCaps = productRepository.searchProducts(filterCaps);
+
 		assertTrue(resultCaps.stream().anyMatch(p -> p.productID() == savedSoundex.productID()),
 				"Case sensitivity should be ignored");
 
@@ -287,9 +296,8 @@ public final class ProductDatabaseRepositoryTest {
 
 	@Test
 	@Order(14)
-	@DisplayName("Should filter search results by brand and price")
+	@DisplayName("Should filter search results by brand and price using ProductFilter")
 	void testComplexSearchFilter() throws Exception {
-
 		Product hit = new Product(0, "Gaming Mouse", Category.ELECTRONICS, "Logitech", 50);
 		Product tooExpensive = new Product(0, "Expensive Keyboard", Category.ELECTRONICS, "Logitech", 150);
 		Product wrongBrand = new Product(0, "Other Headset", Category.ELECTRONICS, "Razer", 50);
@@ -298,10 +306,12 @@ public final class ProductDatabaseRepositoryTest {
 		Product savedExp = productRepository.addProduct(tooExpensive);
 		Product savedWrong = productRepository.addProduct(wrongBrand);
 
-		String[] searchBrands = { "Logitech" };
-		int maxPrice = 100;
+		// Use ProductFilter
+		ProductFilter filter = new ProductFilter();
+		filter.setBrands(List.of("Logitech"));
+		filter.setMaxPrice(100);
 
-		List<Product> results = productRepository.searchProducts("", maxPrice, -1, null, searchBrands);
+		List<Product> results = productRepository.searchProducts(filter);
 
 		assertNotNull(results);
 		assertFalse(results.isEmpty(), "One product should be found");

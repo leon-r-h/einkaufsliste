@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -62,82 +61,89 @@ public final class ProductDatabaseRepository implements ProductRepository {
 	}
 
 	@Override
-	public List<Product> findProducts(Category searchCategory) throws DataAccessException {
-		return searchProducts(null, -1, -1, new Category[] { searchCategory }, null);
-	}
+	public List<Product> searchProducts(ProductFilter filter) throws DataAccessException {
+		if (filter == null || filter.isEmpty()) {
+			return getProducts();
+		}
 
-	@Override
-	public List<Product> searchProducts(String searchName) throws DataAccessException {
-		return searchProducts(searchName, -1, -1, null, null);
-	}
+		StringBuilder sql = new StringBuilder("SELECT * FROM product WHERE 1=1");
+		List<Object> parameters = new ArrayList<>();
 
-	@Override
-	public List<Product> searchProducts(String searchName, int maxPrice, int minPrice, Category[] categories,
-			String[] brands) throws DataAccessException {
-		final String sql = """
-				SELECT * FROM product
-				WHERE (? IS NULL OR (LOWER(name) LIKE ? OR SOUNDEX(name) LIKE CONCAT(TRIM(TRAILING '0' FROM SOUNDEX(?)), '%')))
-				AND (? = -1 OR price <= ?)
-				AND (? = -1 OR price >= ?)
-				AND (? IS NULL OR category = ?)
-				AND (? IS NULL OR brand = ?)
-				ORDER BY name ASC
-				""";
+		if (filter.getSearchText() != null) {
+			sql.append(
+					" AND (LOWER(name) LIKE ? OR SOUNDEX(name) LIKE CONCAT(TRIM(TRAILING '0' FROM SOUNDEX(?)), '%'))");
+			String searchText = filter.getSearchText().toLowerCase();
+			parameters.add("%" + searchText + "%");
+			parameters.add(filter.getSearchText());
+		}
 
-		List<Product> list = new ArrayList<>();
-		String rawName = (searchName != null && !searchName.isBlank()) ? searchName : null;
-		String likeName = (rawName != null) ? "%" + rawName.toLowerCase() + "%" : null;
-		String catVal = (categories != null && categories.length > 0) ? categories[0].name() : null;
-		String brandVal = (brands != null && brands.length > 0) ? brands[0] : null;
+		if (filter.getMinPrice() != null) {
+			sql.append(" AND price >= ?");
+			parameters.add(filter.getMinPrice());
+		}
+		if (filter.getMaxPrice() != null) {
+			sql.append(" AND price <= ?");
+			parameters.add(filter.getMaxPrice());
+		}
 
+		if (!filter.getCategories().isEmpty()) {
+			sql.append(" AND category IN (");
+			int i = 0;
+			for (Category cat : filter.getCategories()) {
+				sql.append(i == 0 ? "?" : ", ?");
+				parameters.add(cat.name());
+				i++;
+			}
+			sql.append(")");
+		}
+
+		if (!filter.getBrands().isEmpty()) {
+			sql.append(" AND brand IN (");
+			for (int i = 0; i < filter.getBrands().size(); i++) {
+				sql.append(i == 0 ? "?" : ", ?");
+				parameters.add(filter.getBrands().get(i));
+			}
+			sql.append(")");
+		}
+
+		sql.append(" ORDER BY name ASC");
+
+		List<Product> results = new ArrayList<>();
 		try (Connection connection = Database.getConnection();
-				PreparedStatement statement = connection.prepareStatement(sql)) {
+				PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
 
-			if (rawName == null) {
-				statement.setNull(1, Types.VARCHAR);
-				statement.setNull(2, Types.VARCHAR);
-				statement.setNull(3, Types.VARCHAR);
-			} else {
-				statement.setString(1, rawName);
-				statement.setString(2, likeName);
-				statement.setString(3, rawName);
+			for (int i = 0; i < parameters.size(); i++) {
+				preparedStatement.setObject(i + 1, parameters.get(i));
 			}
 
-			statement.setInt(4, maxPrice);
-			statement.setInt(5, maxPrice);
-			statement.setInt(6, minPrice);
-			statement.setInt(7, minPrice);
-			if (catVal == null) {
-				statement.setNull(8, Types.VARCHAR);
-				statement.setNull(9, Types.VARCHAR);
-			} else {
-				statement.setString(8, catVal);
-				statement.setString(9, catVal);
-			}
-
-			if (brandVal == null) {
-				statement.setNull(10, Types.VARCHAR);
-				statement.setNull(11, Types.VARCHAR);
-			} else {
-				statement.setString(10, brandVal);
-				statement.setString(11, brandVal);
-			}
-
-			try (ResultSet rs = statement.executeQuery()) {
-				while (rs.next()) {
-					list.add(mapToProduct(rs));
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					results.add(mapToProduct(resultSet));
 				}
 			}
 		} catch (SQLException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			throw new DataAccessException(e);
 		}
-		return list;
+
+		return results;
 	}
 
 	@Override
 	public List<Product> getProducts() throws DataAccessException {
-		return searchProducts(null, -1, -1, null, null);
+		List<Product> list = new ArrayList<>();
+		final String sql = "SELECT * FROM product ORDER BY name ASC";
+		try (Connection connection = Database.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(sql);
+				ResultSet resultSet = preparedStatement.executeQuery()) {
+			while (resultSet.next()) {
+				list.add(mapToProduct(resultSet));
+			}
+		} catch (SQLException e) {
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
+		}
+		return list;
 	}
 
 	@Override

@@ -1,21 +1,23 @@
 package com.siemens.einkaufsliste.gui;
 
 import java.awt.event.ActionEvent;
+import java.util.function.Supplier;
 
-import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import com.siemens.einkaufsliste.database.repository.ProductFilter;
+
 public final class ProductSearchListener implements DocumentListener {
 
-	private final JTextField searchField;
 	private final ProductTableModel model;
+	private final Supplier<ProductFilter> filterSupplier;
 	private final Timer debounceTimer;
 
-	public ProductSearchListener(JTextField searchField, ProductTableModel model) {
-		this.searchField = searchField;
+	public ProductSearchListener(ProductTableModel model, Supplier<ProductFilter> filterSupplier) {
 		this.model = model;
+		this.filterSupplier = filterSupplier;
 
 		this.debounceTimer = new Timer(20, (ActionEvent e) -> triggerSearch());
 		this.debounceTimer.setRepeats(false);
@@ -37,15 +39,11 @@ public final class ProductSearchListener implements DocumentListener {
 	}
 
 	private void restartTimer() {
-		if (debounceTimer.isRunning()) {
-			debounceTimer.restart();
-		} else {
-			debounceTimer.start();
-		}
+		debounceTimer.restart();
 	}
 
 	private void triggerSearch() {
-		String query = searchField.getText();
-		model.search(query);
+		ProductFilter filter = filterSupplier.get();
+		model.search(filter);
 	}
 }
