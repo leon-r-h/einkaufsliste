@@ -23,6 +23,7 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
@@ -148,17 +149,16 @@ public final class MainWindow implements UserContext {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-		JButton refreshButton = new JButton(
-				new FlatSVGIcon(getClass().getResource("/com/siemens/einkaufsliste/gui/refresh.svg")));
-		refreshButton.setToolTipText("Refresh");
-		refreshButton.addActionListener(e -> refresh());
+		JToggleButton filterButton = new JToggleButton(new FlatFilterIcon());
+		filterButton.setToolTipText("Filter");
+		filterButton.addActionListener(e -> refresh());
 
 		productModel = new ProductTableModel(Database.getProducts());
 
 		searchField = new JTextField();
 		searchField.putClientProperty("JTextField.placeholderText", "Search");
 		searchField.putClientProperty("JTextField.leadingIcon", new FlatSearchIcon());
-		searchField.putClientProperty("JTextField.trailingComponent", refreshButton);
+		searchField.putClientProperty("JTextField.trailingComponent", filterButton);
 		searchField.putClientProperty("JTextField.showClearButton", true);
 		searchField.putClientProperty("JTextField.clearCallback", (Runnable) () -> searchField.setText(""));
 		searchField.getDocument().addDocumentListener(new ProductSearchListener(searchField, productModel));
