@@ -3,10 +3,7 @@ package com.siemens.einkaufsliste.gui;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 
-import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
 
 import com.siemens.einkaufsliste.database.model.Entry;
@@ -17,9 +14,6 @@ import com.siemens.einkaufsliste.database.repository.ProductRepository;
 public final class EntryTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
-
-	private static final Logger LOGGER = Logger.getLogger(EntryTableModel.class.getName());
-
 	private static final String[] COLUMN_NAMES = { "Checked", "Quantity", "Product" };
 
 	private List<ShoppingListItem> items;
@@ -37,19 +31,10 @@ public final class EntryTableModel extends AbstractTableModel {
 			return;
 		}
 
-		new SwingWorker<Void, Void>() {
-			@Override
-			protected Void doInBackground() throws Exception {
-				entryRepository.addEntry(entry);
-
-				return null;
-			}
-
-			@Override
-			protected void done() {
-				reloadData();
-			}
-		}.execute();
+		TaskQueue.submit(() -> {
+			entryRepository.addEntry(entry);
+			return null;
+		}, ignored -> reloadData());
 	}
 
 	public void removeEntryAt(int rowIndex) {
@@ -59,29 +44,18 @@ public final class EntryTableModel extends AbstractTableModel {
 
 		ShoppingListItem target = items.get(rowIndex);
 
-		new SwingWorker<Void, Void>() {
-			@Override
-			protected Void doInBackground() throws Exception {
-				entryRepository.removeEntry(target.entry().entryID());
-				return null;
+		TaskQueue.submit(() -> {
+			entryRepository.removeEntry(target.entry().entryID());
+			return target.entry();
+		}, deletedEntry -> {
+			int idx = findIndexById(deletedEntry.entryID());
+			if (idx != -1) {
+				items.remove(idx);
+				fireTableRowsDeleted(idx, idx);
+			} else {
+				reloadData();
 			}
-
-			@Override
-			protected void done() {
-				try {
-					get();
-
-					if (rowIndex < items.size() && items.get(rowIndex).entry().entryID() == target.entry().entryID()) {
-						items.remove(rowIndex);
-						fireTableRowsDeleted(rowIndex, rowIndex);
-					} else {
-						reloadData();
-					}
-				} catch (InterruptedException | ExecutionException e) {
-					ErrorHandler.handle(null, e, LOGGER);
-				}
-			}
-		}.execute();
+		});
 	}
 
 	public void reloadData() {
@@ -93,22 +67,10 @@ public final class EntryTableModel extends AbstractTableModel {
 
 		int userID = userContext.getCurrentUser().get().userID();
 
-		new SwingWorker<List<ShoppingListItem>, Void>() {
-			@Override
-			protected List<ShoppingListItem> doInBackground() throws Exception {
-				return entryRepository.getEntries(userID);
-			}
-
-			@Override
-			protected void done() {
-				try {
-					items = new ArrayList<>(get());
-					refreshTable();
-				} catch (InterruptedException | ExecutionException e) {
-					ErrorHandler.handle(null, e, LOGGER);
-				}
-			}
-		}.execute();
+		TaskQueue.submit(() -> entryRepository.getEntries(userID), fetchedList -> {
+			items = new ArrayList<>(fetchedList);
+			refreshTable();
+		});
 	}
 
 	@Override
@@ -165,32 +127,35 @@ public final class EntryTableModel extends AbstractTableModel {
 		ShoppingListItem currentItem = items.get(rowIndex);
 		Entry currentEntry = currentItem.entry();
 
-		new SwingWorker<Entry, Void>() {
-			@Override
-			protected Entry doInBackground() throws Exception {
-				if (columnIndex == 0) {
-					return ((Boolean) aValue) ? entryRepository.checkEntry(currentEntry.entryID())
-							: entryRepository.uncheckEntry(currentEntry.entryID());
-				} else if (columnIndex == 1) {
-					return entryRepository.updateQuantity(currentEntry.entryID(), (Integer) aValue);
-				}
-				return null;
+		TaskQueue.submit(() -> {
+			if (columnIndex == 0) {
+				return ((Boolean) aValue) ? entryRepository.checkEntry(currentEntry.entryID())
+						: entryRepository.uncheckEntry(currentEntry.entryID());
+			} else if (columnIndex == 1) {
+				return entryRepository.updateQuantity(currentEntry.entryID(), (Integer) aValue);
 			}
+			return null;
+		}, updatedEntry -> {
+			if (updatedEntry != null) {
+				int idx = findIndexById(updatedEntry.entryID());
+				if (idx != -1) {
+					ShoppingListItem newItem = new ShoppingListItem(updatedEntry, currentItem.product());
+					items.set(idx, newItem);
+					refreshTable();
+				} else {
+					reloadData();
+				}
+			}
+		});
+	}
 
-			@Override
-			protected void done() {
-				try {
-					Entry updatedEntry = get();
-					if (updatedEntry != null) {
-						ShoppingListItem newItem = new ShoppingListItem(updatedEntry, currentItem.product());
-						items.set(rowIndex, newItem);
-						refreshTable();
-					}
-				} catch (InterruptedException | ExecutionException e) {
-					ErrorHandler.handle(null, e, LOGGER);
-				}
+	private int findIndexById(int entryID) {
+		for (int i = 0; i < items.size(); i++) {
+			if (items.get(i).entry().entryID() == entryID) {
+				return i;
 			}
-		}.execute();
+		}
+		return -1;
 	}
 
 	private void refreshTable() {

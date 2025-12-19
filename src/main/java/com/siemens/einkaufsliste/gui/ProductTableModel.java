@@ -2,11 +2,8 @@ package com.siemens.einkaufsliste.gui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
+import java.util.Objects;
 
-import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
 
 import com.siemens.einkaufsliste.database.model.Product;
@@ -16,14 +13,10 @@ public final class ProductTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final Logger LOGGER = Logger.getLogger(ProductTableModel.class.getName());
-
 	private static final String[] COLUMN_NAMES = { "Name", "Category", "Brand", "Price" };
 
 	private List<Product> products;
 	private final ProductRepository productRepository;
-
-	private SwingWorker<List<Product>, Void> activeWorker;
 
 	private String currentQuery = null;
 
@@ -34,41 +27,22 @@ public final class ProductTableModel extends AbstractTableModel {
 
 	public void search(String query) {
 		this.currentQuery = query;
+		final String querySnapshot = query;
 
-		if (activeWorker != null && !activeWorker.isDone()) {
-			activeWorker.cancel(true);
-		}
-
-		activeWorker = new SwingWorker<>() {
-			@Override
-			protected List<Product> doInBackground() throws Exception {
-				if (isCancelled()) {
-					return null;
-				}
-
-				if (query == null || query.isBlank()) {
-					return new ArrayList<>(productRepository.getProducts());
-				} else {
-					return new ArrayList<>(productRepository.searchProducts(query));
-				}
+		TaskQueue.submit(() -> {
+			if (querySnapshot == null || querySnapshot.isBlank()) {
+				return new ArrayList<>(productRepository.getProducts());
+			} else {
+				return new ArrayList<>(productRepository.searchProducts(querySnapshot));
+			}
+		}, fetched -> {
+			if (!Objects.equals(currentQuery, querySnapshot)) {
+				return;
 			}
 
-			@Override
-			protected void done() {
-				if (isCancelled()) {
-					return;
-				}
-
-				try {
-					products = get();
-					fireTableDataChanged();
-				} catch (InterruptedException | CancellationException | ExecutionException e) {
-					ErrorHandler.handle(null, e, LOGGER);
-				}
-			}
-		};
-
-		activeWorker.execute();
+			products = fetched;
+			fireTableDataChanged();
+		});
 	}
 
 	public void reloadData() {

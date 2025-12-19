@@ -1,12 +1,13 @@
 package com.siemens.einkaufsliste.database.repository;
 
-import com.siemens.einkaufsliste.database.repository.Database;
-import com.siemens.einkaufsliste.database.repository.DataAccessException;
-import com.siemens.einkaufsliste.database.model.Entry;
-import com.siemens.einkaufsliste.database.model.Product;
-import com.siemens.einkaufsliste.database.model.User;
-import com.siemens.einkaufsliste.database.model.User.Gender;
-import com.siemens.einkaufsliste.database.model.ShoppingListItem;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -15,16 +16,9 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.model.ShoppingListItem;
+import com.siemens.einkaufsliste.database.model.User;
 
 public final class EntryUtil {
 
@@ -42,9 +36,11 @@ public final class EntryUtil {
 			writer.write("Product;Quantity;Price;CheckedDate\n");
 			for (ShoppingListItem sli : items) {
 				if (sli.entry().checkDate() != null) {
-					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";" + sli.entry().checkDate());
+					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";"
+							+ sli.entry().checkDate());
 				} else {
-					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";" + "-");
+					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";"
+							+ "-");
 				}
 				writer.write("\n");
 			}

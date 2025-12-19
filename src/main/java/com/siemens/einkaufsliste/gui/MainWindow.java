@@ -88,11 +88,13 @@ public final class MainWindow implements UserContext {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
+				TaskQueue.shutdown();
 				Database.disconnect();
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException ex) {
 				}
+
 				System.exit(0);
 			}
 		});
