@@ -106,7 +106,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	@Override
 	public int totalPrice(int userID) throws DataAccessException {
 		final String sql = """
-				SELECT SUM(price)
+				SELECT SUM(product.price * entry.quantity)
 				FROM product, entry, user
 				WHERE product.productID = entry.productID
 				AND entry.userID = user.userID
