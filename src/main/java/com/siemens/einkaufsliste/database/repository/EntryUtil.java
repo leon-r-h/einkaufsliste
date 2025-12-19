@@ -122,7 +122,7 @@ public final class EntryUtil {
 
 				// Einträge
 				content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-				int gesamtpreis = 0;
+				int gesamtpreis = entryRepository.totalPrice(userID);				
 
 				for (ShoppingListItem sli : items) {
 					Product product = sli.product();
@@ -130,9 +130,8 @@ public final class EntryUtil {
 					String menge = String.valueOf(sli.entry().quantity());
 					int preis = product != null ? product.price() : 0;
 					String preisStr = String.format("%.2f EUR", preis / 100.0);
-					gesamtpreis += preis;
 					String datum = sli.entry().checkDate() != null ? sli.entry().checkDate().toString() : "-";
-
+					
 					content.beginText();
 					content.newLineAtOffset(50, y);
 					content.showText(produktName);
