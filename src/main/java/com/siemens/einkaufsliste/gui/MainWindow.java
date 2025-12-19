@@ -23,7 +23,6 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
@@ -154,13 +153,12 @@ public final class MainWindow implements UserContext {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-		JToggleButton filterButton = new JToggleButton(new FlatFilterIcon());
+		JButton filterButton = new JButton(new FlatFilterIcon());
 		filterButton.setToolTipText("Filter");
 		filterButton.addActionListener(e -> {
 			if (filterPopup != null) {
 				filterPopup.show(filterButton, 0, filterButton.getHeight());
 			}
-			filterButton.setSelected(false);
 		});
 
 		productModel = new ProductTableModel(Database.getProducts());
