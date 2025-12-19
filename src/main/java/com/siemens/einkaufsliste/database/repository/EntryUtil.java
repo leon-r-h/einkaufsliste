@@ -33,17 +33,23 @@ public final class EntryUtil {
 		List<ShoppingListItem> items = entryRepository.getEntries(userID);
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			writer.write("Product;Quantity;Price;CheckedDate\n");
+			writer.write("Product;Quantity;Price (EUR);CheckedDate\n");
 			for (ShoppingListItem sli : items) {
 				if (sli.entry().checkDate() != null) {
-					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";"
+					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" 
+							+ String.format("%.2f", sli.product().price() / 100.0) + ";"
 							+ sli.entry().checkDate());
 				} else {
-					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";"
+					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" 
+							+ String.format("%.2f", sli.product().price() / 100.0) + ";"
 							+ "-");
 				}
 				writer.write("\n");
 			}
+
+			// Gesamtpreis
+			int gesamtpreis = entryRepository.totalPrice(userID);
+			writer.write("\nTotal Price;;" + String.format("%.2f", gesamtpreis / 100.0) + "\n");
 		}
 	}
 
