@@ -110,7 +110,7 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				FROM product, entry, user
 				WHERE product.productID = entry.productID
 				AND entry.userID = user.userID
-				AND userID = ?
+				AND entry.userID = ?
 				""";
 		try (Connection connection = Database.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
