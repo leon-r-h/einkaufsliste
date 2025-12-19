@@ -7,6 +7,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,6 +15,7 @@ import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -29,6 +31,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
@@ -39,6 +42,7 @@ import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.User;
 import com.siemens.einkaufsliste.database.repository.DataAccessException;
 import com.siemens.einkaufsliste.database.repository.Database;
+import com.siemens.einkaufsliste.database.repository.EntryUtil;
 import com.siemens.einkaufsliste.database.repository.ProductFilter;
 
 public final class MainWindow implements UserContext {
@@ -143,8 +147,77 @@ public final class MainWindow implements UserContext {
 		refreshButton.addActionListener(e -> refresh());
 		frame.getRootPane().registerKeyboardAction(e -> refresh(), KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0),
 				JComponent.WHEN_IN_FOCUSED_WINDOW);
-
 		toolBar.add(refreshButton);
+		
+		JButton exportCsvButton = new JButton("Export CSV...");
+		exportCsvButton.addActionListener(e -> {
+			if (currentUser.isEmpty()) {
+				return;
+			}
+
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle(frame.getTitle());
+			chooser.setFileFilter(new FileNameExtensionFilter("CSV files", "csv"));
+
+			while (true) {
+				int result = chooser.showSaveDialog(frame);
+				if (result != JFileChooser.APPROVE_OPTION) {
+					return;
+				}
+
+				File file = chooser.getSelectedFile();
+				if (!file.getName().toLowerCase().endsWith(".csv")) {
+					file = new File(file.getParentFile(), file.getName() + ".csv");
+				}
+
+				if (file.exists()) {
+					continue;
+				}
+
+				try {
+					EntryUtil.exportEntriesAsCsv(currentUser.get().userID(), file);
+				} catch (Exception ex) {
+					ErrorHandler.handle(frame, ex, LOGGER);
+				}
+				return;
+			}
+		});
+		toolBar.add(exportCsvButton);
+
+		JButton exportPdfButton = new JButton("Export PDF...");
+		exportPdfButton.addActionListener(e -> {
+			if (currentUser.isEmpty()) {
+				return;
+			}
+
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle(frame.getTitle());
+			chooser.setFileFilter(new FileNameExtensionFilter("PDF files", "pdf"));
+
+			while (true) {
+				int result = chooser.showSaveDialog(frame);
+				if (result != JFileChooser.APPROVE_OPTION) {
+					return;
+				}
+
+				File file = chooser.getSelectedFile();
+				if (!file.getName().toLowerCase().endsWith(".pdf")) {
+					file = new File(file.getParentFile(), file.getName() + ".pdf");
+				}
+
+				if (file.exists()) {
+					continue;
+				}
+
+				try {
+					EntryUtil.exportEntriesAsPdf(currentUser.get().userID(), file);
+				} catch (Exception ex) {
+					ErrorHandler.handle(frame, ex, LOGGER);
+				}
+				return;
+			}
+		});
+		toolBar.add(exportPdfButton);
 
 		return toolBar;
 	}
