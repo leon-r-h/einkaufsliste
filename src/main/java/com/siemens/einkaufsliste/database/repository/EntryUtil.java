@@ -32,10 +32,6 @@ public final class EntryUtil {
 		EntryRepository entryRepository = Database.getEntries();
 		List<ShoppingListItem> items = entryRepository.getEntries(userID);
 
-		if (!file.exists()) {
-			file.mkdirs();
-		}
-
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			writer.write("Product;Quantity;Price;CheckedDate\n");
 			for (ShoppingListItem sli : items) {
@@ -175,10 +171,6 @@ public final class EntryUtil {
 				content.newLineAtOffset(320, y);
 				content.showText(String.format("%.2f EUR", gesamtpreis / 100.0));
 				content.endText();
-			}
-
-			if (!file.exists()) {
-				file.mkdirs();
 			}
 
 			doc.save(file);
