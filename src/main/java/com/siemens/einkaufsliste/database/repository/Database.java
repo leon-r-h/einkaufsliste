@@ -141,8 +141,6 @@ public final class Database {
 	 *                               initialized
 	 */
 	public static void disconnect() {
-		System.out.println(dataSource);
-
 		if (dataSource == null || dataSource.isClosed()) {
 			throw new IllegalStateException();
 		}
