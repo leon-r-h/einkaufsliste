@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,12 +29,11 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
-import javax.swing.WindowConstants;
 
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.User;
@@ -81,10 +82,20 @@ public final class MainWindow implements UserContext {
 	private EntryTableModel shoppingListModel;
 
 	private void initializeInterface() {
-		FlatDarkLaf.setup();
+		FlatMacDarkLaf.setup();
 
 		frame = new JFrame("Formula Emendi");
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				Database.disconnect();
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException ex) {
+				}
+				System.exit(0);
+			}
+		});
 
 		frame.setIconImages(
 				FlatSVGUtils.createWindowIconImages(getClass().getResource("/com/siemens/einkaufsliste/gui/logo.svg")));
@@ -263,6 +274,8 @@ public final class MainWindow implements UserContext {
 			this.currentUser = Optional.empty();
 			refresh();
 		}
+
+		System.gc();
 	}
 
 	private void addSelectedProductToCart() {

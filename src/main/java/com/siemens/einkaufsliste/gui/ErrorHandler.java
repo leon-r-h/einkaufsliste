@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import com.siemens.einkaufsliste.database.repository.DataAccessException;
 
@@ -23,8 +24,8 @@ public final class ErrorHandler {
 		if (throwable instanceof DataAccessException) {
 			logger.log(Level.WARNING, "Database operation failed", throwable);
 
-			JOptionPane.showMessageDialog(parentComponent, "Could not communicate with the database.", "Formula Emendi",
-					JOptionPane.ERROR_MESSAGE);
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parentComponent,
+					"Could not communicate with the database.", "Formula Emendi", JOptionPane.ERROR_MESSAGE));
 		} else if (throwable instanceof InterruptedException) {
 			logger.log(Level.INFO, "Operation interrupted");
 			Thread.currentThread().interrupt();
