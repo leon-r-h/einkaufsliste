@@ -33,6 +33,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
@@ -89,7 +90,7 @@ public final class MainWindow implements UserContext {
 	private ProductFilter currentFilter;
 
 	private void initializeInterface() {
-		FlatMacDarkLaf.setup();
+		FlatDarkLaf.setup();
 
 		currentFilter = new ProductFilter();
 
