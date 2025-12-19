@@ -4,8 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,15 +20,22 @@ import com.siemens.einkaufsliste.database.model.User;
 
 public final class EntryUtil {
 
-	public static void exportEntriesAsCsv(int userID) throws IOException, DataAccessException {
+
+	/**
+	 *
+	 * @param userID The ID of the user whose entries are to be loaded
+	 * @param file The target file where the CSV will be saved
+	 * @return List of Entries loaded from the given file
+	 * @throws IOException
+	 * @throws DataAccessException
+	 */
+	public static void exportEntriesAsCsv(int userID, File file) throws IOException, DataAccessException {
 		EntryRepository entryRepository = Database.getEntries();
 		List<ShoppingListItem> items = entryRepository.getEntries(userID);
-		File folder = new File("entry_exports/" + userID + "/csv");
-		if (!folder.exists()) {
-			folder.mkdirs();
+
+		if (!file.exists()) {
+			file.mkdirs();
 		}
-		File file = new File("entry_exports/" + userID + "/csv/entries_user_" + userID + "_"
-				+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv");
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			writer.write("Product;Quantity;Price;CheckedDate\n");
@@ -50,12 +55,13 @@ public final class EntryUtil {
 	/**
 	 *
 	 * @param userID The ID of the user whose entries are to be loaded
+	 * @param file The target file where the PDF will be saved
 	 * @return List of Entries loaded from the given file
 	 * @throws IOException
 	 * @throws DataAccessException
 	 */
 
-	public static void exportEntriesAsPdf(int userID) throws IOException, DataAccessException {
+	public static void exportEntriesAsPdf(int userID, File file) throws IOException, DataAccessException {
 		EntryRepository entryRepository = Database.getEntries();
 		UserRepository userRepository = Database.getUsers();
 		List<ShoppingListItem> items = entryRepository.getEntries(userID);
@@ -172,12 +178,10 @@ public final class EntryUtil {
 				content.endText();
 			}
 
-			File folder = new File("entry_exports/" + userID + "/pdf/");
-			if (!folder.exists()) {
-				folder.mkdirs();
+			if (!file.exists()) {
+			file.mkdirs();
 			}
-			File file = new File("entry_exports/" + userID + "/pdf/entries_user_" + userID + "_"
-					+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".pdf");
+			
 			doc.save(file);
 		}
 	}
