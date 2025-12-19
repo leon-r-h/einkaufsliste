@@ -16,56 +16,15 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
-import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.model.ShoppingListItem;
 import com.siemens.einkaufsliste.database.model.User;
 
 public final class EntryUtil {
 
-	private EntryUtil() {
-	}
-
-	/* Testing Main Method */
-
-	public static void main(String[] args) {
-
-		Database.connect();
-
-		int userID = 1;
+	public static void exportEntriesAsCsv(int userID) throws IOException, DataAccessException {
 		EntryRepository entryRepository = Database.getEntries();
-
-		entryRepository.nukeEntries(1);
-		entryRepository.nukeEntries(3);
-
-		Entry e1 = entryRepository.addEntry(new Entry(-1, 1, 100, 1, null));
-		Entry e2 = entryRepository.addEntry(new Entry(-1, 3, 101, 2, null));
-		Entry e3 = entryRepository.addEntry(new Entry(-1, 1, 102, 10, null));
-		Entry e4 = entryRepository.addEntry(new Entry(-1, 1, 104, 2, null));
-
-		entryRepository.checkEntry(e3.entryID());
-		entryRepository.checkEntry(e4.entryID());
-
-		try {
-			exportEntriesAsCsv(1);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			exportEntriesAsPdf(userID);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		entryRepository.nukeEntries(1);
-		entryRepository.nukeEntries(3);
-
-		Database.disconnect();
-	}
-
-	public static void exportEntriesAsCsv(int userID) throws IOException {
-		EntryRepository entryRepository = Database.getEntries();
-		List<Entry> entries = entryRepository.getEntries(userID);
+		List<ShoppingListItem> items = entryRepository.getEntries(userID);
 		File folder = new File("entry_exports/" + userID + "/csv");
 		if (!folder.exists()) {
 			folder.mkdirs();
@@ -74,14 +33,14 @@ public final class EntryUtil {
 				+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv");
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			writer.write("entryID;userID;productID;quantity;checkDate\n");
-			for (Entry entry : entries) {
-				if (entry.checkDate() != null) {
-					writer.write(entry.entryID() + ";" + entry.userID() + ";" + entry.productID() + ";"
-							+ entry.quantity() + ";" + entry.checkDate().toString());
+			writer.write("Product;Quantity;Price;CheckedDate\n");
+			for (ShoppingListItem sli : items) {
+				if (sli.entry().checkDate() != null) {
+					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";"
+							+ sli.entry().checkDate());
 				} else {
-					writer.write(entry.entryID() + ";" + entry.userID() + ";" + entry.productID() + ";"
-							+ entry.quantity() + ";" + "-");
+					writer.write(sli.product().name() + ";" + sli.entry().quantity() + ";" + sli.product().price() + ";"
+							+ "-");
 				}
 				writer.write("\n");
 			}
@@ -93,13 +52,13 @@ public final class EntryUtil {
 	 * @param userID The ID of the user whose entries are to be loaded
 	 * @return List of Entries loaded from the given file
 	 * @throws IOException
+	 * @throws DataAccessException
 	 */
 
-	public static void exportEntriesAsPdf(int userID) throws IOException {
+	public static void exportEntriesAsPdf(int userID) throws IOException, DataAccessException {
 		EntryRepository entryRepository = Database.getEntries();
-		ProductRepository productRepository = Database.getProducts();
 		UserRepository userRepository = Database.getUsers();
-		List<Entry> entries = entryRepository.getEntries(userID);
+		List<ShoppingListItem> items = entryRepository.getEntries(userID);
 
 		try (PDDocument doc = new PDDocument()) {
 			PDPage page = new PDPage(PDRectangle.A4);
@@ -164,14 +123,14 @@ public final class EntryUtil {
 				content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
 				int gesamtpreis = 0;
 
-				for (Entry entry : entries) {
-					Product product = productRepository.getProduct(entry.productID()).orElse(null);
+				for (ShoppingListItem sli : items) {
+					Product product = sli.product();
 					String produktName = product != null ? product.name() : "Unbekannt";
-					String menge = String.valueOf(entry.quantity());
+					String menge = String.valueOf(sli.entry().quantity());
 					int preis = product != null ? product.price() : 0;
 					String preisStr = String.format("%.2f EUR", preis / 100.0);
 					gesamtpreis += preis;
-					String datum = entry.checkDate() != null ? entry.checkDate().toString() : "-";
+					String datum = sli.entry().checkDate() != null ? sli.entry().checkDate().toString() : "-";
 
 					content.beginText();
 					content.newLineAtOffset(50, y);

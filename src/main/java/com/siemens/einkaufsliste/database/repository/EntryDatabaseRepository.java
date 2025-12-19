@@ -11,16 +11,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.siemens.einkaufsliste.database.model.Entry;
+import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.model.ShoppingListItem;
 
 public final class EntryDatabaseRepository implements EntryRepository {
 
-	EntryDatabaseRepository() {
+	private static final Logger LOGGER = Logger.getLogger(EntryDatabaseRepository.class.getName());
+
+	EntryDatabaseRepository() throws DataAccessException {
 		createIfNonExistent();
 	}
 
-	private void createIfNonExistent() {
+	private void createIfNonExistent() throws DataAccessException {
 		final String sql = """
 				 CREATE TABLE IF NOT EXISTS entry (
 				     entryID INT AUTO_INCREMENT PRIMARY KEY,
@@ -28,63 +34,77 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				     productID INT NOT NULL,
 				     quantity INT,
 				     checkDate DATE,
-
 				     FOREIGN KEY (userID) REFERENCES user(userID) ON DELETE CASCADE,
 				     FOREIGN KEY (productID) REFERENCES product(productID)
 				 )
 				""";
 
-		try {
-			Connection connection = Database.getConnection();
-			Statement statement = connection.createStatement();
+		try (Connection connection = Database.getConnection(); Statement statement = connection.createStatement()) {
 			statement.execute(sql);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public void nukeEntries(int userID) {
-		final String sql = """
-				DELETE FROM entry
-				WHERE userID = ?
-				""";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, userID);
-
-			stmt.executeUpdate();
+	public void nukeEntries(int userID) throws DataAccessException {
+		final String sql = "DELETE FROM entry WHERE userID = ?";
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, userID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public List<Entry> getEntries(int userID) {
-		List<Entry> entries = new ArrayList<>();
-		final String sql = """
-				SELECT entryID, userID, entry.productID, quantity, checkDate
-				FROM entry, product
-				WHERE entry.productID = product.productID
-				AND userID = ?
-				ORDER BY checkDate IS NOT NULL, product.name ASC, checkDate ASC
-				""";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, userID);
+	public List<ShoppingListItem> getEntries(int userID) throws DataAccessException {
+		List<ShoppingListItem> items = new ArrayList<>();
 
-			try (ResultSet rs = stmt.executeQuery()) {
-				while (rs.next()) {
-					entries.add(mapToEntry(rs));
+		final String sql = """
+				SELECT
+				    entry.entryID, entry.userID, entry.productID, entry.quantity, entry.checkDate,
+				    product.name, product.category, product.brand, product.price
+				FROM entry
+				JOIN product ON entry.productID = product.productID
+				WHERE entry.userID = ?
+				ORDER BY entry.checkDate IS NOT NULL, product.name ASC, entry.checkDate ASC
+				""";
+
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, userID);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				while (resultSet.next()) {
+					LocalDate checkDate = null;
+					Date sqlDate = resultSet.getDate("checkDate");
+					if (sqlDate != null) {
+						checkDate = sqlDate.toLocalDate();
+					}
+
+					Entry entry = new Entry(resultSet.getInt("entryID"), resultSet.getInt("userID"),
+							resultSet.getInt("productID"), resultSet.getInt("quantity"), checkDate);
+
+					Product product = new Product(resultSet.getInt("productID"), resultSet.getString("name"),
+							Product.Category.valueOf(resultSet.getString("category")), resultSet.getString("brand"),
+							resultSet.getInt("price"));
+
+					items.add(new ShoppingListItem(entry, product));
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		return Collections.unmodifiableList(entries);
+
+		return Collections.unmodifiableList(items);
 	}
 
 	@Override
-	public int totalPrice(int userID) {
+	public int totalPrice(int userID) throws DataAccessException {
 		final String sql = """
 				SELECT SUM(price)
 				FROM product, entry, user
@@ -92,183 +112,151 @@ public final class EntryDatabaseRepository implements EntryRepository {
 				AND entry.userID = user.userID
 				AND userID = ?
 				""";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, userID);
-
-			try (ResultSet rs = stmt.executeQuery()) {
-				if (rs.next()) {
-					return rs.getInt(1);
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, userID);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getInt(1);
 				}
 			}
-
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new IllegalArgumentException();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 		return 0;
 	}
 
 	@Override
-	public Optional<Entry> getEntry(int entryID) {
+	public Optional<Entry> getEntry(int entryID) throws DataAccessException {
 		final String sql = "SELECT * FROM entry WHERE entryID= ?";
-		try (PreparedStatement preparedStatement = Database.getConnection().prepareStatement(sql)) {
-			preparedStatement.setInt(1, entryID);
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, entryID);
+			try (ResultSet resultSet = statement.executeQuery()) {
 				if (resultSet.next()) {
 					return Optional.of(mapToEntry(resultSet));
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-
 		return Optional.empty();
 	}
 
 	@Override
-	public Entry checkEntry(int entryID) {
+	public Entry checkEntry(int entryID) throws DataAccessException {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-
-			stmt.setDate(1, Date.valueOf(LocalDate.now()));
-			stmt.setInt(2, entryID);
-
-			stmt.executeUpdate();
-
-			Optional<Entry> entryOptional = getEntry(entryID);
-			if (!entryOptional.isPresent()) {
-				throw new IllegalArgumentException();
-			}
-			return entryOptional.get();
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setDate(1, Date.valueOf(LocalDate.now()));
+			statement.setInt(2, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		throw new IllegalArgumentException();
+
+		return getEntry(entryID).orElseThrow(IllegalArgumentException::new);
 	}
 
 	@Override
-	public Entry uncheckEntry(int entryID) {
+	public Entry uncheckEntry(int entryID) throws DataAccessException {
 		final String sql = "UPDATE entry SET checkDate = ? WHERE entryID = ?";
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-
-			stmt.setDate(1, null);
-			stmt.setInt(2, entryID);
-
-			stmt.executeUpdate();
-
-			Optional<Entry> entryOptional = getEntry(entryID);
-			if (!entryOptional.isPresent()) {
-				throw new IllegalArgumentException();
-			}
-			return entryOptional.get();
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setDate(1, null);
+			statement.setInt(2, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		throw new IllegalArgumentException();
+		return getEntry(entryID)
+				.orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
 	}
 
 	@Override
-	public Entry updateQuantity(int entryID, int quantity) {
+	public Entry updateQuantity(int entryID, int quantity) throws DataAccessException {
 		if (quantity < 1) {
 			throw new IllegalArgumentException();
 		}
 
 		final String sql = "UPDATE entry SET quantity = ? WHERE entryID = ?";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, quantity);
-			stmt.setInt(2, entryID);
-
-			stmt.executeUpdate();
-			Optional<Entry> entryOptional = getEntry(entryID);
-			if (!entryOptional.isPresent()) {
-				throw new IllegalArgumentException();
-			}
-			return entryOptional.get();
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, quantity);
+			statement.setInt(2, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
-		throw new IllegalArgumentException();
+
+		return getEntry(entryID)
+				.orElseThrow(() -> new DataAccessException(new SQLException("Entry not found after update")));
 	}
 
 	@Override
-	public Entry addEntry(Entry entry) {
-		// Wirf Exception, wenn die Menge ungültig ist
+	public Entry addEntry(Entry entry) throws DataAccessException {
 		if (entry.quantity() < 1) {
-			throw new IllegalArgumentException(); // Ungültige Eingabedaten
+			throw new IllegalArgumentException();
 		}
 
 		final String sql = "INSERT INTO entry (userID, productID, quantity, checkDate) VALUES (?, ?, ?, ?)";
 
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-			stmt.setInt(1, entry.userID());
-			stmt.setInt(2, entry.productID());
-			stmt.setInt(3, entry.quantity());
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+			statement.setInt(1, entry.userID());
+			statement.setInt(2, entry.productID());
+			statement.setInt(3, entry.quantity());
 			if (entry.checkDate() == null) {
-				stmt.setDate(4, null);
+				statement.setDate(4, null);
 			} else {
-				stmt.setDate(4, Date.valueOf(entry.checkDate()));
+				statement.setDate(4, Date.valueOf(entry.checkDate()));
 			}
 
-			int affectedRows = stmt.executeUpdate();
-
+			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
-				throw new IllegalArgumentException(); // Es wurde kein Datensatz eingefügt
+				throw new IllegalArgumentException();
 			}
 
-			try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+			try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
 				if (generatedKeys.next()) {
 					int newID = generatedKeys.getInt(1);
-
 					return new Entry(newID, entry.userID(), entry.productID(), entry.quantity(), entry.checkDate());
-
 				} else {
-					throw new IllegalArgumentException(); // Es wurde kein neuer Schlüssel generiert
+					throw new IllegalArgumentException();
 				}
 			}
-
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new IllegalArgumentException(); // SQL-Fehler beim Einfügen
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
 	@Override
-	public void removeEntry(int entryID) {
+	public void removeEntry(int entryID) throws DataAccessException {
 		final String sql = "DELETE FROM entry WHERE entryID = ?";
-
-		try (PreparedStatement stmt = Database.getConnection().prepareStatement(sql)) {
-			stmt.setInt(1, entryID);
-
-			stmt.executeUpdate();
-
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, entryID);
+			statement.executeUpdate();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
 		}
 	}
 
-	private Entry mapToEntry(ResultSet rs) throws SQLException {
-		if (rs.getDate("checkDate") == null) {
-			return new Entry(rs.getInt("entryID"), rs.getInt("userID"), rs.getInt("productID"), rs.getInt("quantity"),
-					null);
+	private Entry mapToEntry(ResultSet resultSet) throws SQLException {
+		if (resultSet.getDate("checkDate") == null) {
+			return new Entry(resultSet.getInt("entryID"), resultSet.getInt("userID"), resultSet.getInt("productID"),
+					resultSet.getInt("quantity"), null);
 		} else {
-			return new Entry(rs.getInt("entryID"), rs.getInt("userID"), rs.getInt("productID"), rs.getInt("quantity"),
-					rs.getDate("checkDate").toLocalDate());
+			return new Entry(resultSet.getInt("entryID"), resultSet.getInt("userID"), resultSet.getInt("productID"),
+					resultSet.getInt("quantity"), resultSet.getDate("checkDate").toLocalDate());
 		}
 	}
-
-	/**
-	 *
-	 * Returns a positive int if budget is not exceeded by returned value. Returns a
-	 * negative int if budget is exceeded by returned value.
-	 *
-	 */
-	public int budgetTotalPriceDifference(int userID, int budget) {
-		return budget - totalPrice(userID);
-	}
-
 }

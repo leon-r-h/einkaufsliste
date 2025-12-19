@@ -17,7 +17,7 @@ public final class ProductSearchListener implements DocumentListener {
 		this.searchField = searchField;
 		this.model = model;
 
-		this.debounceTimer = new Timer(100, (ActionEvent e) -> triggerSearch());
+		this.debounceTimer = new Timer(20, (ActionEvent e) -> triggerSearch());
 		this.debounceTimer.setRepeats(false);
 	}
 

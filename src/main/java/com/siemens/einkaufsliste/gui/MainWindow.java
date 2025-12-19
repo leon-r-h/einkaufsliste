@@ -5,7 +5,11 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -25,18 +29,20 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
-import javax.swing.WindowConstants;
 
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.extras.FlatSVGUtils;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.siemens.einkaufsliste.database.model.Entry;
 import com.siemens.einkaufsliste.database.model.Product;
 import com.siemens.einkaufsliste.database.model.User;
+import com.siemens.einkaufsliste.database.repository.DataAccessException;
 import com.siemens.einkaufsliste.database.repository.Database;
 
 public final class MainWindow implements UserContext {
+
+	private static final Logger LOGGER = Logger.getLogger(MainWindow.class.getName());
 
 	public static void main(String[] args) {
 		new MainWindow();
@@ -50,7 +56,14 @@ public final class MainWindow implements UserContext {
 	}
 
 	private void initializeLogic() {
-		Database.connect();
+		// Set sensible logging format
+		System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] %4$s: %5$s%6$s%n");
+
+		try {
+			Database.connect();
+		} catch (DataAccessException e) {
+			ErrorHandler.handle(null, e, LOGGER);
+		}
 	}
 
 	@Override
@@ -58,7 +71,7 @@ public final class MainWindow implements UserContext {
 		return currentUser;
 	}
 
-	private static final int ROW_HEIGHT = 24;
+	private static final int ROW_HEIGHT = 36;
 
 	private JFrame frame;
 	private JTable productTable;
@@ -69,10 +82,22 @@ public final class MainWindow implements UserContext {
 	private EntryTableModel shoppingListModel;
 
 	private void initializeInterface() {
-		FlatDarkLaf.setup();
+		FlatMacDarkLaf.setup();
 
 		frame = new JFrame("Formula Emendi");
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				TaskQueue.shutdown();
+				Database.disconnect();
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException ex) {
+				}
+
+				System.exit(0);
+			}
+		});
 
 		frame.setIconImages(
 				FlatSVGUtils.createWindowIconImages(getClass().getResource("/com/siemens/einkaufsliste/gui/logo.svg")));
@@ -146,6 +171,8 @@ public final class MainWindow implements UserContext {
 		productTable.setDragEnabled(true);
 
 		productTable.setTransferHandler(new TransferHandler() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int getSourceActions(JComponent component) {
 				return COPY;
@@ -198,6 +225,8 @@ public final class MainWindow implements UserContext {
 		shoppingListTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		shoppingListTable.setTransferHandler(new TransferHandler() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public boolean canImport(TransferSupport support) {
 				return currentUser.isPresent() && support.isDataFlavorSupported(ProductTransferable.PRODUCT_FLAVOR);
@@ -214,7 +243,8 @@ public final class MainWindow implements UserContext {
 					addProductToEntries(product);
 					return true;
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.log(Level.WARNING, "Drag and drop failed", e);
+
 					return false;
 				}
 			}
@@ -246,6 +276,8 @@ public final class MainWindow implements UserContext {
 			this.currentUser = Optional.empty();
 			refresh();
 		}
+
+		System.gc();
 	}
 
 	private void addSelectedProductToCart() {

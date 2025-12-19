@@ -29,7 +29,7 @@ public final class UserDatabaseRepositoryTest {
 	private static User testUser;
 
 	@BeforeAll
-	static void setupDatabase() {
+	static void setupDatabase() throws Exception {
 		Database.connect();
 		userRepository = Database.getUsers();
 	}
@@ -41,15 +41,15 @@ public final class UserDatabaseRepositoryTest {
 
 	@Test
 	@Order(1)
-	@DisplayName("Register Test User - Success")
-	void registerTestUser() {
-		testUser = new User(0, "Max", "Müller", LocalDate.of(1990, 3, 15), User.Gender.MALE,
-				"max.mueller.test@email.de", "Pass123!", true);
+	@DisplayName("Should successfully register a test user")
+	void registerTestUser() throws Exception {
+		testUser = new User(0, "Max", "Miller", LocalDate.of(1990, 3, 15), User.Gender.MALE, "max.miller.test@email.de",
+				"Pass123!", true);
 
 		User registeredUser = userRepository.registerUser(testUser);
 
 		assertNotNull(registeredUser);
-		assertTrue(registeredUser.userID() > 0, "User ID sollte größer als 0 sein");
+		assertTrue(registeredUser.userID() > 0, "User ID should be greater than 0");
 		assertEquals(testUser.firstName(), registeredUser.firstName());
 		assertEquals(testUser.email(), registeredUser.email());
 
@@ -58,10 +58,10 @@ public final class UserDatabaseRepositoryTest {
 
 	@Test
 	@Order(2)
-	@DisplayName("Register User - Duplicate Email throws Exception")
+	@DisplayName("Registering user with duplicate email should throw Exception")
 	void registerUserDuplicateEmail() {
-		User duplicateUser = new User(0, "Anna", "Schmidt", LocalDate.of(1985, 7, 22), User.Gender.FEMALE,
-				"max.mueller.test@email.de", "Pass456!", false);
+		User duplicateUser = new User(0, "Anna", "Smith", LocalDate.of(1985, 7, 22), User.Gender.FEMALE,
+				"max.miller.test@email.de", "Pass456!", false);
 
 		assertThrows(IllegalArgumentException.class, () -> {
 			userRepository.registerUser(duplicateUser);
@@ -70,68 +70,68 @@ public final class UserDatabaseRepositoryTest {
 
 	@Test
 	@Order(3)
-	@DisplayName("Get User by ID - Success")
-	void getUserById() {
+	@DisplayName("Should retrieve user by ID successfully")
+	void getUserById() throws Exception {
 		Optional<User> foundUser = userRepository.getUser(testUser.userID());
 
-		assertTrue(foundUser.isPresent(), "User sollte gefunden werden");
+		assertTrue(foundUser.isPresent(), "User should be found");
 		assertEquals(testUser.email(), foundUser.get().email());
 		assertEquals(testUser.firstName(), foundUser.get().firstName());
 	}
 
 	@Test
 	@Order(4)
-	@DisplayName("Get User by ID - Not Found")
-	void getUserByIdNotFound() {
+	@DisplayName("Should return empty optional for invalid user ID")
+	void getUserByIdNotFound() throws Exception {
 		Optional<User> foundUser = userRepository.getUser(999999);
 
-		assertFalse(foundUser.isPresent(), "User sollte nicht gefunden werden");
+		assertFalse(foundUser.isPresent(), "User should not be found");
 	}
 
 	@Test
 	@Order(5)
-	@DisplayName("Get User by Email - Success")
-	void getUserByEmail() {
-		Optional<User> foundUser = userRepository.getUser("max.mueller.test@email.de");
+	@DisplayName("Should retrieve user by Email successfully")
+	void getUserByEmail() throws Exception {
+		Optional<User> foundUser = userRepository.getUser("max.miller.test@email.de");
 
-		assertTrue(foundUser.isPresent(), "User sollte gefunden werden");
+		assertTrue(foundUser.isPresent(), "User should be found");
 		assertEquals(testUser.firstName(), foundUser.get().firstName());
 		assertEquals(testUser.lastName(), foundUser.get().lastName());
 	}
 
 	@Test
 	@Order(6)
-	@DisplayName("Get User by Email - Not Found")
-	void getUserByEmailNotFound() {
-		Optional<User> foundUser = userRepository.getUser("nichtexistent@email.de");
+	@DisplayName("Should return empty optional for invalid Email")
+	void getUserByEmailNotFound() throws Exception {
+		Optional<User> foundUser = userRepository.getUser("nonexistent@email.de");
 
-		assertFalse(foundUser.isPresent(), "User sollte nicht gefunden werden");
+		assertFalse(foundUser.isPresent(), "User should not be found");
 	}
 
 	@Test
 	@Order(7)
-	@DisplayName("Exists by Email - True")
-	void existsByEmailTrue() {
-		boolean exists = userRepository.existsByEmail("max.mueller.test@email.de");
+	@DisplayName("Should confirm email exists")
+	void existsByEmailTrue() throws Exception {
+		boolean exists = userRepository.existsByEmail("max.miller.test@email.de");
 
-		assertTrue(exists, "E-Mail sollte existieren");
+		assertTrue(exists, "Email should exist");
 	}
 
 	@Test
 	@Order(8)
-	@DisplayName("Exists by Email - False")
-	void existsByEmailFalse() {
-		boolean exists = userRepository.existsByEmail("nichtexistent@email.de");
+	@DisplayName("Should confirm email does not exist")
+	void existsByEmailFalse() throws Exception {
+		boolean exists = userRepository.existsByEmail("nonexistent@email.de");
 
-		assertFalse(exists, "E-Mail sollte nicht existieren");
+		assertFalse(exists, "Email should not exist");
 	}
 
 	@Test
 	@Order(9)
-	@DisplayName("Update User - Success")
-	void updateUser() {
-		User updatedUser = new User(testUser.userID(), "Maximilian", "Müller-Schmidt", LocalDate.of(1990, 3, 15),
-				User.Gender.MALE, "max.mueller.test@email.de", "NewPass789!", false);
+	@DisplayName("Should successfully update user information")
+	void updateUser() throws Exception {
+		User updatedUser = new User(testUser.userID(), "Maximilian", "Miller-Smith", LocalDate.of(1990, 3, 15),
+				User.Gender.MALE, "max.miller.test@email.de", "NewPass789!", false);
 
 		assertDoesNotThrow(() -> {
 			userRepository.updateUser(updatedUser);
@@ -140,13 +140,13 @@ public final class UserDatabaseRepositoryTest {
 		Optional<User> foundUser = userRepository.getUser(testUser.userID());
 		assertTrue(foundUser.isPresent());
 		assertEquals("Maximilian", foundUser.get().firstName());
-		assertEquals("Müller-Schmidt", foundUser.get().lastName());
+		assertEquals("Miller-Smith", foundUser.get().lastName());
 		assertFalse(foundUser.get().newsLetter());
 	}
 
 	@Test
 	@Order(10)
-	@DisplayName("Update User - Invalid ID throws Exception")
+	@DisplayName("Updating user with invalid ID should throw Exception")
 	void updateUserInvalidId() {
 		User invalidUser = new User(999999, "Test", "User", LocalDate.of(1990, 1, 1), User.Gender.MALE, "test@email.de",
 				"Pass123!", true);
@@ -158,31 +158,31 @@ public final class UserDatabaseRepositoryTest {
 
 	@Test
 	@Order(11)
-	@DisplayName("Delete User - Success")
-	void deleteUser() {
+	@DisplayName("Should successfully delete user")
+	void deleteUser() throws Exception {
 		boolean deleted = userRepository.deleteUser(testUser.userID());
 
-		assertTrue(deleted, "User sollte gelöscht worden sein");
+		assertTrue(deleted, "User should have been deleted");
 
 		Optional<User> foundUser = userRepository.getUser(testUser.userID());
-		assertFalse(foundUser.isPresent(), "Gelöschter User sollte nicht mehr gefunden werden");
+		assertFalse(foundUser.isPresent(), "Deleted user should not be found");
 	}
 
 	@Test
 	@Order(12)
-	@DisplayName("Delete User - Not Found")
-	void deleteUserNotFound() {
+	@DisplayName("Deleting non-existent user should return false")
+	void deleteUserNotFound() throws Exception {
 		boolean deleted = userRepository.deleteUser(999999);
 
-		assertFalse(deleted, "Nicht existierender User kann nicht gelöscht werden");
+		assertFalse(deleted, "Non-existing user cannot be deleted");
 	}
 
 	@Test
 	@Order(13)
-	@DisplayName("Register Multiple Users")
-	void registerMultipleUsers() {
-		User user1 = new User(0, "Anna", "Schmidt", LocalDate.of(1985, 7, 22), User.Gender.FEMALE,
-				"anna.schmidt.test@email.de", "Secure456", false);
+	@DisplayName("Should successfully register multiple users")
+	void registerMultipleUsers() throws Exception {
+		User user1 = new User(0, "Anna", "Smith", LocalDate.of(1985, 7, 22), User.Gender.FEMALE,
+				"anna.smith.test@email.de", "Secure456", false);
 		User user2 = new User(0, "Thomas", "Weber", LocalDate.of(1992, 11, 8), User.Gender.MALE,
 				"thomas.weber.test@email.de", "MyPass789", true);
 		User user3 = new User(0, "Julia", "Wagner", LocalDate.of(1988, 5, 30), User.Gender.FEMALE,
@@ -200,7 +200,6 @@ public final class UserDatabaseRepositoryTest {
 		assertTrue(registered2.userID() > 0);
 		assertTrue(registered3.userID() > 0);
 
-		// Cleanup
 		userRepository.deleteUser(registered1.userID());
 		userRepository.deleteUser(registered2.userID());
 		userRepository.deleteUser(registered3.userID());
@@ -208,8 +207,8 @@ public final class UserDatabaseRepositoryTest {
 
 	@Test
 	@Order(14)
-	@DisplayName("Test All Genders")
-	void testAllGenders() {
+	@DisplayName("Should handle all gender enum values correctly")
+	void testAllGenders() throws Exception {
 		User maleUser = new User(0, "John", "Doe", LocalDate.of(1990, 1, 1), User.Gender.MALE, "john.doe.test@email.de",
 				"Pass123!", true);
 		User femaleUser = new User(0, "Jane", "Doe", LocalDate.of(1991, 2, 2), User.Gender.FEMALE,
@@ -225,7 +224,6 @@ public final class UserDatabaseRepositoryTest {
 		assertEquals(User.Gender.FEMALE, registered2.gender());
 		assertEquals(User.Gender.OTHER, registered3.gender());
 
-		// Cleanup
 		userRepository.deleteUser(registered1.userID());
 		userRepository.deleteUser(registered2.userID());
 		userRepository.deleteUser(registered3.userID());

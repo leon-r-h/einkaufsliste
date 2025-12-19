@@ -4,58 +4,71 @@ import java.util.Optional;
 
 import com.siemens.einkaufsliste.database.model.User;
 
+/**
+ * Handles user account management and identity.
+ * <p>
+ * This interface defines the rules for signing up ({@code registerUser}) and
+ * finding existing users. It ensures we can look up a {@link User} by ID or
+ * unique email to handle logins and profile updates.
+ * </p>
+ *
+ * @author Leon Hoffmann
+ */
 public interface UserRepository {
 
 	/**
-	 * Searches for a user by ID.
+	 * Retrieves a user by their unique database identifier.
 	 *
-	 * @param userID The ID of the user
-	 * @return An {@link Optional} containing the {@link User}, or {@code Empty} if
-	 *         not found.
+	 * @param userID the unique ID of the user
+	 * @return an {@link Optional} containing the {@link User} if found
+	 * @throws DataAccessException if a database error occurs
 	 */
-	public Optional<User> getUser(int userID);
+	Optional<User> getUser(int userID) throws DataAccessException;
 
 	/**
-	 * Searches for a user by email.
+	 * Retrieves a user by their email address.
 	 *
-	 * @param email The email address
-	 * @return An {@link Optional} containing the {@link User}, or {@code Empty} if
-	 *         not found.
+	 * @param email the email address to search for
+	 * @return an {@link Optional} containing the {@link User} if found
+	 * @throws DataAccessException if a database error occurs
 	 */
-	Optional<User> getUser(String email);
+	Optional<User> getUser(String email) throws DataAccessException;
 
 	/**
-	 * Checks whether an email is already taken.
+	 * Checks if a user already exists with the given email address.
 	 *
-	 * @param email The email to check
-	 * @return {@code true} if the email already exists in the database.
+	 * @param email the email address to check
+	 * @return {@code true} if the email is already in use, {@code false} otherwise
+	 * @throws DataAccessException if a database error occurs
 	 */
-	boolean existsByEmail(String email);
+	boolean existsByEmail(String email) throws DataAccessException;
 
 	/**
-	 * Registers a new user.
+	 * Registers a new user in the system.
 	 *
-	 * @param user The new user
-	 * @return The saved user with the new, correct database ID.
-	 * @throws IllegalArgumentException If the email is already taken.
+	 * @param user the {@link User} object containing registration details
+	 * @return the created {@link User} with the generated database ID
+	 * @throws DataAccessException      if a database error occurs
+	 * @throws IllegalArgumentException if the user data is invalid (e.g., missing
+	 *                                  fields or duplicate email)
 	 */
-	User registerUser(User user) throws IllegalArgumentException;
+	User registerUser(User user) throws DataAccessException, IllegalArgumentException;
 
 	/**
-	 * Deletes a user.
+	 * Deletes a user account from the system.
 	 *
-	 * @param userID The ID of the user to delete.
-	 * @return {@code true} if a user was deleted; {@code false} if the ID did not
-	 *         exist.
+	 * @param userID the ID of the user to delete
+	 * @return {@code true} if the user was successfully deleted, {@code false}
+	 *         otherwise
+	 * @throws DataAccessException if a database error occurs
 	 */
-	public boolean deleteUser(int userID);
+	public boolean deleteUser(int userID) throws DataAccessException;
 
 	/**
-	 * Updates an existing user. The ID is taken directly from the User object.
+	 * Updates an existing user's profile information.
 	 *
-	 * @param user The user with the new data (and the existing ID).
-	 * @return The updated user.
-	 * @throws IllegalArgumentException If the user or the ID is invalid.
+	 * @param user the {@link User} object containing the updated data
+	 * @throws DataAccessException if a database error occurs or if the update fails
 	 */
-	void updateUser(User user);
+	void updateUser(User user) throws DataAccessException;
 }

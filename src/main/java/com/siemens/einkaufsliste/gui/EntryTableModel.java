@@ -2,36 +2,28 @@ package com.siemens.einkaufsliste.gui;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
 
 import com.siemens.einkaufsliste.database.model.Entry;
-import com.siemens.einkaufsliste.database.model.Product;
+import com.siemens.einkaufsliste.database.model.ShoppingListItem;
 import com.siemens.einkaufsliste.database.repository.EntryRepository;
 import com.siemens.einkaufsliste.database.repository.ProductRepository;
 
 public final class EntryTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
-
 	private static final String[] COLUMN_NAMES = { "Checked", "Quantity", "Product" };
 
-	private List<Entry> entries;
-	private final Map<Integer, String> productCache;
+	private List<ShoppingListItem> items;
 	private final EntryRepository entryRepository;
-	private final ProductRepository productRepository;
 	private final UserContext userContext;
 
 	public EntryTableModel(EntryRepository entryRepo, ProductRepository productRepo, UserContext userContext) {
 		this.entryRepository = entryRepo;
-		this.productRepository = productRepo;
 		this.userContext = userContext;
-		this.entries = new ArrayList<>();
-		this.productCache = new HashMap<>();
+		this.items = new ArrayList<>();
 	}
 
 	public void addEntry(Entry entry) {
@@ -39,104 +31,51 @@ public final class EntryTableModel extends AbstractTableModel {
 			return;
 		}
 
-		new SwingWorker<AddResult, Void>() {
-			@Override
-			protected AddResult doInBackground() {
-				Entry saved = entryRepository.addEntry(entry);
-				String name = fetchProductName(saved.productID());
-				return new AddResult(saved, name);
-			}
-
-			@Override
-			protected void done() {
-				try {
-					AddResult result = get();
-					entries.add(result.entry());
-					productCache.put(result.entry().productID(), result.name());
-					refreshTable();
-				} catch (Exception e) {
-					e.printStackTrace();
-					reloadData();
-				}
-			}
-		}.execute();
+		TaskQueue.submit(() -> {
+			entryRepository.addEntry(entry);
+			return null;
+		}, ignored -> reloadData());
 	}
 
 	public void removeEntryAt(int rowIndex) {
-		if (userContext.getCurrentUser().isEmpty() || rowIndex < 0 || rowIndex >= entries.size()) {
+		if (userContext.getCurrentUser().isEmpty() || rowIndex < 0 || rowIndex >= items.size()) {
 			return;
 		}
 
-		Entry target = entries.get(rowIndex);
+		ShoppingListItem target = items.get(rowIndex);
 
-		new SwingWorker<Void, Void>() {
-			@Override
-			protected Void doInBackground() {
-				entryRepository.removeEntry(target.entryID());
-				return null;
+		TaskQueue.submit(() -> {
+			entryRepository.removeEntry(target.entry().entryID());
+			return target.entry();
+		}, deletedEntry -> {
+			int idx = findIndexById(deletedEntry.entryID());
+			if (idx != -1) {
+				items.remove(idx);
+				fireTableRowsDeleted(idx, idx);
+			} else {
+				reloadData();
 			}
-
-			@Override
-			protected void done() {
-				try {
-					get();
-					// Double check index validity after async op
-					if (rowIndex < entries.size() && entries.get(rowIndex).entryID() == target.entryID()) {
-						entries.remove(rowIndex);
-						fireTableRowsDeleted(rowIndex, rowIndex);
-					} else {
-						reloadData();
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					reloadData();
-				}
-			}
-		}.execute();
+		});
 	}
 
 	public void reloadData() {
 		if (userContext.getCurrentUser().isEmpty()) {
-			entries.clear();
-			productCache.clear();
+			items.clear();
 			fireTableDataChanged();
 			return;
 		}
 
 		int userID = userContext.getCurrentUser().get().userID();
 
-		new SwingWorker<ReloadResult, Void>() {
-			@Override
-			protected ReloadResult doInBackground() {
-				List<Entry> freshEntries = new ArrayList<>(entryRepository.getEntries(userID));
-				Map<Integer, String> freshCache = new HashMap<>();
-
-				for (Entry e : freshEntries) {
-					if (!freshCache.containsKey(e.productID())) {
-						freshCache.put(e.productID(), fetchProductName(e.productID()));
-					}
-				}
-				return new ReloadResult(freshEntries, freshCache);
-			}
-
-			@Override
-			protected void done() {
-				try {
-					ReloadResult result = get();
-					entries = result.entries();
-					productCache.clear();
-					productCache.putAll(result.names());
-					refreshTable();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}.execute();
+		TaskQueue.submit(() -> entryRepository.getEntries(userID), fetchedList -> {
+			items = new ArrayList<>(fetchedList);
+			refreshTable();
+		});
 	}
 
 	@Override
 	public int getRowCount() {
-		return entries.size();
+		return items.size();
 	}
 
 	@Override
@@ -166,68 +105,63 @@ public final class EntryTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		if (rowIndex >= entries.size()) {
+		if (rowIndex >= items.size()) {
 			return null;
 		}
-		Entry entry = entries.get(rowIndex);
+		ShoppingListItem item = items.get(rowIndex);
+
 		return switch (columnIndex) {
-		case 0 -> entry.checkDate() != null;
-		case 1 -> entry.quantity();
-		case 2 -> productCache.getOrDefault(entry.productID(), "");
+		case 0 -> item.entry().checkDate() != null;
+		case 1 -> item.entry().quantity();
+		case 2 -> item.product().name();
 		default -> null;
 		};
 	}
 
 	@Override
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-		if (rowIndex >= entries.size() || userContext.getCurrentUser().isEmpty()) {
+		if (rowIndex >= items.size() || userContext.getCurrentUser().isEmpty()) {
 			return;
 		}
 
-		Entry current = entries.get(rowIndex);
+		ShoppingListItem currentItem = items.get(rowIndex);
+		Entry currentEntry = currentItem.entry();
 
-		new SwingWorker<Entry, Void>() {
-			@Override
-			protected Entry doInBackground() {
-				if (columnIndex == 0) {
-					return ((Boolean) aValue) ? entryRepository.checkEntry(current.entryID())
-							: entryRepository.uncheckEntry(current.entryID());
-				} else if (columnIndex == 1) {
-					return entryRepository.updateQuantity(current.entryID(), (Integer) aValue);
-				}
-				return null;
+		TaskQueue.submit(() -> {
+			if (columnIndex == 0) {
+				return ((Boolean) aValue) ? entryRepository.checkEntry(currentEntry.entryID())
+						: entryRepository.uncheckEntry(currentEntry.entryID());
+			} else if (columnIndex == 1) {
+				return entryRepository.updateQuantity(currentEntry.entryID(), (Integer) aValue);
 			}
-
-			@Override
-			protected void done() {
-				try {
-					Entry updated = get();
-					if (updated != null) {
-						entries.set(rowIndex, updated);
-						refreshTable();
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
+			return null;
+		}, updatedEntry -> {
+			if (updatedEntry != null) {
+				int idx = findIndexById(updatedEntry.entryID());
+				if (idx != -1) {
+					ShoppingListItem newItem = new ShoppingListItem(updatedEntry, currentItem.product());
+					items.set(idx, newItem);
+					refreshTable();
+				} else {
 					reloadData();
 				}
 			}
-		}.execute();
+		});
+	}
+
+	private int findIndexById(int entryID) {
+		for (int i = 0; i < items.size(); i++) {
+			if (items.get(i).entry().entryID() == entryID) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	private void refreshTable() {
-		entries.sort(Comparator.comparing((Entry e) -> e.checkDate() != null)
-				.thenComparing(e -> productCache.getOrDefault(e.productID(), ""), String::compareToIgnoreCase)
-				.thenComparing(Entry::checkDate, Comparator.nullsFirst(Comparator.naturalOrder())));
+		items.sort(Comparator.comparing((ShoppingListItem item) -> item.entry().checkDate() != null)
+				.thenComparing(item -> item.product().name(), String::compareToIgnoreCase)
+				.thenComparing(item -> item.entry().checkDate(), Comparator.nullsFirst(Comparator.naturalOrder())));
 		fireTableDataChanged();
-	}
-
-	private String fetchProductName(int productID) {
-		return productRepository.getProduct(productID).map(Product::name).orElse("");
-	}
-
-	private record AddResult(Entry entry, String name) {
-	}
-
-	private record ReloadResult(List<Entry> entries, Map<Integer, String> names) {
 	}
 }
