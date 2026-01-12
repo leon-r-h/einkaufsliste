@@ -176,6 +176,20 @@ public final class EntryUtil {
 				content.newLineAtOffset(320, y);
 				content.showText(String.format("%.2f EUR", gesamtpreis / 100.0));
 				content.endText();
+
+				// Gesamtpreis ohne abgehakte Einträge (unchecked)
+				int gesamtpreisUnchecked = entryRepository.totalPriceWithoutChecked(userID);
+				y -= 18;
+				content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 12);
+				content.beginText();
+				content.newLineAtOffset(50, y);
+				content.showText("Gesamtpreis (unchecked):");
+				content.endText();
+
+				content.beginText();
+				content.newLineAtOffset(320, y);
+				content.showText(String.format("%.2f EUR", gesamtpreisUnchecked / 100.0));
+				content.endText();
 			}
 
 			doc.save(file);

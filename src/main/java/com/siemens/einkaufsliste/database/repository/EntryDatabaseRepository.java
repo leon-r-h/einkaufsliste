@@ -128,6 +128,31 @@ public final class EntryDatabaseRepository implements EntryRepository {
 	}
 
 	@Override
+	public int totalPriceWithoutChecked(int userID) throws DataAccessException {
+		final String sql = """
+				SELECT SUM(product.price * entry.quantity)
+				FROM product, entry, user
+				WHERE product.productID = entry.productID
+				AND entry.checkDate IS NULL
+				AND entry.userID = user.userID
+				AND entry.userID = ?
+				""";
+		try (Connection connection = Database.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, userID);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getInt(1);
+				}
+			}
+		} catch (SQLException e) {
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			throw new DataAccessException(e);
+		}
+		return 0;
+	}
+
+	@Override
 	public Optional<Entry> getEntry(int entryID) throws DataAccessException {
 		final String sql = "SELECT * FROM entry WHERE entryID= ?";
 		try (Connection connection = Database.getConnection();

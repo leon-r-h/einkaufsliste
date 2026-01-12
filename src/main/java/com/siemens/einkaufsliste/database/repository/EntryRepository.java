@@ -50,6 +50,15 @@ public interface EntryRepository {
 	int totalPrice(int userID) throws DataAccessException;
 
 	/**
+	 * Calculates the total cost of all unchecked items in the user's list.
+	 *
+	 * @param userID the ID of the user
+	 * @return the sum of (price * quantity) for all unchecked entries, in cents
+	 * @throws DataAccessException if a database error occurs during calculation
+	 */
+	int totalPriceWithoutChecked(int userID) throws DataAccessException;
+
+	/**
 	 * Retrieves a specific entry by its unique identifier.
 	 *
 	 * @param entryID the unique ID of the entry
