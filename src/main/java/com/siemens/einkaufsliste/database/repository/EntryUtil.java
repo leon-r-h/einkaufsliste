@@ -92,14 +92,6 @@ public final class EntryUtil {
 				content.showText(userFirstname + " " + userLastname + "'s Formula Emendi");
 				content.endText();
 
-				y -= 20;
-
-				content.beginText();
-				content.newLineAtOffset(50, y);
-				content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 14);
-				content.showText("effugere doloris");
-				content.endText();
-
 				y -= 40;
 
 				// Tabellenkopf
